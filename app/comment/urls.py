@@ -1,10 +1,10 @@
 ﻿from fastapi import APIRouter, HTTPException
 from sqlalchemy import select
-from ..database import SessionDep
-from .schemas import CommentRead, CommentCreate, CommentUpdate
-from .models import Comment
+from app.database import SessionDep
+from app.comment.schemas import CommentRead, CommentCreate, CommentUpdate
+from app.comment.models import Comment
 
-router = APIRouter()
+router = APIRouter(tags=["comments"])
 
 # создание комментария (create)
 @router.post("/", response_model=CommentRead)

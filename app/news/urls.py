@@ -1,11 +1,11 @@
 ﻿from fastapi import APIRouter, HTTPException
 from sqlalchemy import select
-from ..database import SessionDep
-from .schemas import NewsCreate, NewsRead, NewsUpdate
-from .models import News
+from app.database import SessionDep
+from app.news.schemas import NewsCreate, NewsRead, NewsUpdate
+from app.news.models import News
 from app.user.models import User
 
-router = APIRouter()
+router = APIRouter(tags=["news"])
 
 # создание новости (create)
 @router.post("/", response_model=NewsRead)

@@ -1,10 +1,10 @@
 ﻿from fastapi import APIRouter, HTTPException
 from sqlalchemy import select
-from ..database import SessionDep
-from .schemas import UserCreate, UserRead, UserUpdate
-from .models import User
+from app.database import SessionDep
+from app.user.schemas import UserCreate, UserRead, UserUpdate
+from app.user.models import User
 
-router = APIRouter()
+router = APIRouter(tags=["users"])
 
 # создание пользователя (create)
 @router.post("/", response_model=UserRead)
@@ -13,7 +13,7 @@ async def create_user(user: UserCreate, db: SessionDep):
     existing_user = await db.execute(select(User).where(User.email == user.email))
     if existing_user.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="Email already registered")
-    
+
     new_user = User(**user.model_dump())
     db.add(new_user)
     await db.commit()
@@ -44,7 +44,7 @@ async def update_user(user_id: int, user_update: UserUpdate, db: SessionDep):
         raise HTTPException(status_code=404, detail="User not found")
     for field, value in user_update.model_dump(exclude_unset=True).items():
         setattr(user, field, value)
-    
+
     await db.commit()
     await db.refresh(user)
     return user

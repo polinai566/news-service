@@ -12,7 +12,7 @@ class CommentCreate(CommentBase):
 class CommentUpdate(CommentBase):
     pass
 
-class Comment(CommentBase):
+class CommentRead(CommentBase):
     comment_id: int
     news_id: int
     publication_date: datetime
