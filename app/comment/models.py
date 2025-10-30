@@ -12,5 +12,5 @@ class Comment(Base):
     author_id = Column(Integer, ForeignKey("user.user_id"), nullable=False)
     publication_date = Column(DateTime, default=datetime.now)
 
-    news = relationship("News", back_populates="comment")
-    author = relationship("User", back_populates="comment")
+    news = relationship("News", back_populates="comment", lazy="subquery")
+    author = relationship("User", back_populates="comment", lazy="subquery")

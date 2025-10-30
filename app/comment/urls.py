@@ -1,57 +1,28 @@
-﻿from fastapi import APIRouter, HTTPException
-from sqlalchemy import select
-from app.database import SessionDep
-from app.comment.schemas import CommentRead, CommentCreate, CommentUpdate
-from app.comment.models import Comment
+﻿from fastapi import APIRouter, Depends
+from .schemas import CommentCreate, CommentRead, CommentUpdate
+from .service import CommentService
 
 router = APIRouter(tags=["comments"])
 
-# создание комментария (create)
+async def comment_service(service: CommentService = Depends()) -> CommentService:
+    return service
+
 @router.post("/", response_model=CommentRead)
-async def create_order(comment: CommentCreate, db: SessionDep):
-    new_comment = Comment(**comment.model_dump())
-    db.add(new_comment)
-    await db.commit()
-    await db.refresh(new_comment)
-    return new_comment
+async def create_order(payload: CommentCreate, service: CommentService = Depends(comment_service)):
+    return await service.create(payload)
 
-# чтение списка комментариев (read)
 @router.get("/", response_model=list[CommentRead])
-async def get_comments(db: SessionDep):
-    comments = await db.execute(select(Comment))
-    return comments.scalars().all()
+async def get_comments(service: CommentService = Depends(comment_service)):
+    return await service.list()
 
-# чтение комментария по индексу (read)
 @router.get("/{comment_id}", response_model=CommentRead)
-async def get_comment_by_id(comment_id: int, db: SessionDep):
-    comment = await db.execute(select(Comment).where(Comment.comment_id == comment_id))
-    comment = comment.scalar_one_or_none()
-    if not comment:
-        raise HTTPException(status_code=404, detail="Comment not found")
-    return comment
+async def get_comment_by_id(comment_id: int, service: CommentService = Depends(comment_service)):
+    return await service.get(comment_id)
 
-# обновление комментария (update)
 @router.put("/{comment_id}", response_model=CommentRead)
-async def update_comment(comment_id: int, comment_update: CommentUpdate, db: SessionDep):
-    comment = await db.execute(select(Comment).where(Comment.comment_id == comment_id))
-    comment = comment.scalar_one_or_none()
-    if not comment:
-        raise HTTPException(status_code=404, detail="Comment not found")
-    for field, value in comment_update.model_dump(exclude_unset=True).items():
-        setattr(comment, field, value)
-    
-    await db.commit()
-    await db.refresh(comment)
-    return comment
+async def update_comment(comment_id: int, payload: CommentUpdate, service: CommentService = Depends(comment_service)):
+    return await service.update(comment_id, payload)
 
-# удаление комментария (delete)
 @router.delete("/{comment_id}")
-async def delete_comment(comment_id: int, db: SessionDep):
-    comment = await db.execute(select(Comment).where(Comment.comment_id == comment_id))
-    comment = comment.scalar_one_or_none()
-    if not comment:
-        raise HTTPException(status_code=404, detail="Comment not found")
-    
-    await db.delete(comment)
-    await db.commit()
-    return {"message": "Comment deleted successfully"}
+async def delete_comment(comment_id: int, service: CommentService = Depends(comment_service)):
+    return await service.delete(comment_id)

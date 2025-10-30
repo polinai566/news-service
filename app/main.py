@@ -1,6 +1,4 @@
 ﻿from fastapi import FastAPI
-from fastapi import Depends
-from sqlalchemy import text
 
 from .comment.urls import router as comment_router
 from .news.urls import router as news_router
@@ -11,3 +9,7 @@ app = FastAPI() # инициализация приложения
 app.include_router(user_router, prefix="/user")
 app.include_router(news_router, prefix="/news")
 app.include_router(comment_router, prefix="/comment")
+
+import logging
+logging.basicConfig()    
+logging.getLogger("sqlalchemy.engine").setLevel(logging.DEBUG)
