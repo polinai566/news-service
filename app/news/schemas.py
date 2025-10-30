@@ -9,7 +9,7 @@ class NewsBase(BaseModel):
     cover: Optional[str] = None
 
 class NewsCreate(NewsBase):
-    author_id: int
+    pass
 
 class NewsUpdate(NewsBase):
     pass
@@ -17,5 +17,6 @@ class NewsUpdate(NewsBase):
 class NewsRead(NewsBase):
     news_id: int
     publication_date: datetime
+    author_id: int
     author: UserRead
     model_config = ConfigDict(from_attributes=True)

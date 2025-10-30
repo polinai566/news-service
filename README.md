@@ -2,7 +2,7 @@
 
 ## Описание сервиса
 
-При помощи сервиса можно создавать, изменять, удалять и извлекать сущности: User, News, Comment.
+При помощи сервиса можно создавать, изменять, удалять и извлекать сущности: User, News, Comment, Session.
 
 ## Визуализация моделей сущностей и их связей
 
@@ -10,10 +10,12 @@
 
 ## Шаги для запуска сервиса
 
-1. В файлах app/database.py и alembic.ini изменить параметры для подключения к вашей базе данных в строках:
+1. Создать файл .env со строками следующего типа:
 
-DATABASE_URL = "postgresql+asyncpg://postgres:password@localhost:5432/webdev" (app/database.py, 6 строка)
-sqlalchemy.url = postgresql://postgres:password@localhost:5432/webdev (alembic.ini, 86 строка)
+DATABASE_URL=postgresql+asyncpg://postgres:password@localhost:5432/webdev
+JWT_SECRET_KEY=my_secret_key
+JWT_LIFETIME_MINUTES=10
+REFRESH_TOKEN_LIFETIME_DAYS=1
 
 2. Создать и активировать вирутальное окружение:
 
@@ -28,6 +30,10 @@ pip install sqlalchemy[asyncio] asyncpg
 pip install alembic
 pip install pydantic[email]
 pip install psycopg2-binary
+pip install passlib[argon2]
+pip install authlib
+pip install python-dotenv
+pip install PyJWT
 
 4. Применить миграции
 
