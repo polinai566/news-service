@@ -4,6 +4,7 @@ from typing import Annotated, AsyncGenerator
 from fastapi import Depends
 from dotenv import load_dotenv
 import os
+import redis
 
 load_dotenv()
 
@@ -25,3 +26,5 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
             await session.close()
 
 SessionDep = Annotated[AsyncSession, Depends(get_db_session)]
+
+redis_client = redis.Redis(host="31.44.2.72", port=6379, db=0, password="nTpi5X3xgwQecD")
