@@ -2,60 +2,91 @@
 
 ## Описание сервиса
 
-При помощи сервиса можно создавать, изменять, удалять и извлекать сущности: User, News, Comment, Session.
+При помощи новостного сервиса можно: 
+- регистрировать, изменять, удалять и получать пользователей (User)
+- создавать, изменять, удалять и получать новости (News) и комментарии к новостям (Comment)
+- авторизовывать пользователей (то есть, создавать для них сессии), получать и удалять сессии (Session) и обновлять их при помощи refresh токенов
+- авторизовывать пользователей через GitHub
 
 ## Визуализация моделей сущностей и их связей
 
-![ER-диаграмма](resources/ER-диаграмма.png)
+![ER-диаграмма](docs/ER-диаграмма.png)
 
 ## Шаги для запуска сервиса
 
-1. Создать файл .env со строками следующего типа:
+1. Создать файл .env со строками по следующему образцу:
 
-DATABASE_URL=postgresql+asyncpg://postgres:password@localhost:5432/webdev
-JWT_SECRET_KEY=my_secret_key
-JWT_LIFETIME_MINUTES=10
-REFRESH_TOKEN_LIFETIME_DAYS=1
+    DATABASE_URL=postgresql+asyncpg://postgres:password@localhost:5432/db \
+    ALEMBIC_DATABASE_URL=postgresql://postgres:password@localhost:5432/db \
+    JWT_SECRET_KEY=your-secret-key \
+    JWT_LIFETIME_MINUTES=10 \
+    REFRESH_TOKEN_LIFETIME_DAYS=1 \
+    GITHUB_CLIENT_ID=your-client-id \
+    GITHUB_CLIENT_SECRET=your-client-secret \
+    GITHUB_CLIENT_REDIRECT=http://localhost:8000/session/auth/callback
+    
+    Для получения Client ID, Client Secret и Client Redirect:
 
-2. Создать и активировать вирутальное окружение:
+    - перейдите по ссылке: https://github.com/settings/developers
+    - нажмите **Новое приложение OAuth** и заполните обязательные поля (в частности Client Redirect)
+    - нажмите **Зарегистрировать заявку**
+    - после регистрации GitHub предоставит Вам Client ID и Client Secret
 
-python -m venv .venv
-.venv\Scripts\Activate.ps1
+2. Создать и активировать виртуальное окружение:
+
+    python -m venv .venv \
+    .venv\Scripts\Activate.ps1
 
 3. Установить необходимые зависимости:
 
-pip install fastapi
-pip install uvicorn
-pip install sqlalchemy[asyncio] asyncpg
-pip install alembic
-pip install pydantic[email]
-pip install psycopg2-binary
-pip install passlib[argon2]
-pip install authlib
-pip install python-dotenv
-pip install PyJWT
+    pip install fastapi \
+    pip install uvicorn \
+    pip install sqlalchemy[asyncio] asyncpg \
+    pip install alembic \
+    pip install pydantic[email] \
+    pip install psycopg2-binary \
+    pip install passlib[argon2] \
+    pip install authlib \
+    pip install python-dotenv \
+    pip install PyJWT \
+    pip install fastapi-sso
 
 4. Применить миграции
 
-alembic upgrade head
+    Команда для применения всех существующих миграций: \
+    alembic upgrade head
 
-Для отката последней миграции используйте команду:
-alembic downgrade -1
+    Для отката последней миграции используйте команду: \
+    alembic downgrade -1
 
 5. Запустить приложение
 
-uvicorn app.main:app
+    uvicorn app.main:app
 
 ## Описание и использование ручек
 
-Описание каждого из методов CRUD для каждой сущности можно посмотреть с помощью инструмента Swagger после запуска приложения по адресу http://127.0.0.1:8000/docs. Там же можно протестировать работу приложения.
+После запуска приложения описание каждого из методов CRUD для каждой сущности можно посмотреть с помощью инструмента **Swagger** по адресу http://127.0.0.1:8000/docs. 
+
+При помощи инструмента **Postman** можно протестировать работу приложения.
+
+Для тестирования авторизации через GitHub вставьте в браузер следующую ссылку: \
+http://127.0.0.1:8000/session/auth/login
 
 ## Описание миграций
 
-Миграция "Initial tables" была создана при помощи команды:
-alembic revision --autogenerate -m "Initial tables"
+Миграция "Initial tables" была создана при помощи команды: \
+alembic revision --autogenerate -m "Initial tables" \
 Она инициализирует таблицы.
 
-Миграция "Add users, news and comment" была создана при помощи команды:
-alembic revision -m "Add users, news and comment"
-Она может создавать и удалять пользователей, новость, написанную одним из пользователем, и комментарий, написанный другим пользователем.
+Миграция "Add users, news and comments" была создана при помощи команды: \
+alembic revision -m "Add users, news and comments"
+
+Эта миграция создаёт трёх пользователей с разными ролями (admin, author, user), одну новость и два комментария, написанные разными пользователями. При откате данной миграции база данных полностью отчищается от всех данных, в том числе от тех, которые были созданы после применения этой миграции.
+
+Пароли пользователей хранятся в базе данных в хэшированном виде. При тестировании для создания сессий моковых пользователей воспользуйтесь следующими email и password:
+
+- для user_id = 1 (admin): email = 'polina@mail.ru', password = '12345678'
+- для user_id = 2 (author): email = 'mitya@mail.ru', password = '87654321'
+- для user_id = 3 (user): email = 'danya@mail.ru', password = '12348765'
+
+Подробнее о том, как работает текущая ролевая модель можно прочесть в docs/auth.md.

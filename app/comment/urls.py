@@ -11,7 +11,7 @@ async def comment_service(service: CommentService = Depends()) -> CommentService
     return service
 
 @router.post("/", response_model=CommentRead | str)
-async def create_order(payload: CommentCreate, service: CommentService = Depends(comment_service), jwt_token: str = Depends(oauth2)):
+async def create_comment(payload: CommentCreate, service: CommentService = Depends(comment_service), jwt_token: str = Depends(oauth2)):
     return await service.create(payload, jwt_token)
 
 @router.get("/", response_model=list[CommentRead] | str)

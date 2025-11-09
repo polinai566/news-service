@@ -13,9 +13,16 @@ from app.news.models import News
 from app.comment.models import Comment
 from app.session.models import Session
 
+from alembic import context
+from dotenv import load_dotenv
+
+load_dotenv()
+url = os.environ["ALEMBIC_DATABASE_URL"]
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
+config.set_main_option("sqlalchemy.url", url)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

@@ -1,23 +1,36 @@
 ﻿from jwt import InvalidSignatureError, ExpiredSignatureError, InvalidTokenError
 from dotenv import load_dotenv
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+from fastapi_sso.sso.github import GithubSSO
 from argon2 import PasswordHasher
 from typing import Any, Literal
 import jwt
 import random
 import string
 import os
+import httpx
 
 load_dotenv()
 
-SECRET_KEY = str(os.getenv("JWT_SECRET_KEY"))
-LIFETIME = int(str(os.getenv("JWT_LIFETIME_MINUTES")))
+SECRET_KEY = os.environ["JWT_SECRET_KEY"]
+LIFETIME = int(os.environ["JWT_LIFETIME_MINUTES"])
+GITHUB_CLIENT_ID = os.environ["GITHUB_CLIENT_ID"]
+GITHUB_CLIENT_SECRET = os.environ["GITHUB_CLIENT_SECRET"]
+GITHUB_CLIENT_REDIRECT = os.environ["GITHUB_CLIENT_REDIRECT"]
+
+timeout = httpx.Timeout(30.0)
+sso = GithubSSO(
+    client_id=GITHUB_CLIENT_ID,
+    client_secret=GITHUB_CLIENT_SECRET,
+    redirect_uri=GITHUB_CLIENT_REDIRECT,
+    allow_insecure_http=True,
+)
 
 '''Функция создания JWT-токена'''
 def create_jwt(user_id: int, user_role: str, secret_key: str = SECRET_KEY, lifetime: int = LIFETIME):
     jwt_token = jwt.encode({"user_id": str(user_id),
                                 "user_role": user_role,
-                                "exp": datetime.now() + timedelta(minutes=lifetime)}, 
+                                "exp": datetime.now(timezone.utc) + timedelta(minutes=lifetime)}, 
                                 secret_key, algorithm="HS256")
     return jwt_token
 

@@ -15,7 +15,7 @@ class CommentService:
         jwt_payload = check_jwt(jwt_token)
         if not jwt_payload:
             return "Incorrect token"
-        new_comment = Comment(**payload.model_dump(), author_id = jwt_payload["user_id"])
+        new_comment = Comment(**payload.model_dump(), author_id = int(jwt_payload["user_id"]))
         self.db.add(new_comment)
         await self.db.commit()
         await self.db.refresh(new_comment)

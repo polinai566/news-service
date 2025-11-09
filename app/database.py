@@ -7,7 +7,7 @@ import os
 
 load_dotenv()
 
-DATABASE_URL = str(os.getenv("DATABASE_URL"))
+DATABASE_URL = os.environ["DATABASE_URL"]
 
 engine = create_async_engine(DATABASE_URL)
 AsyncSessionLocal = async_sessionmaker(bind=engine)

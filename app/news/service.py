@@ -16,7 +16,7 @@ class NewsService:
         if not jwt_payload:
             return "Incorrect token"
         if jwt_payload["user_role"] in ("admin", "author"):
-            new_news = News(**payload.model_dump(), author_id = jwt_payload["user_id"])
+            new_news = News(**payload.model_dump(), author_id = int(jwt_payload["user_id"]))
             self.db.add(new_news)
             await self.db.commit()
             await self.db.refresh(new_news)
