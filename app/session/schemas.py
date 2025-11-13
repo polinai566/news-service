@@ -1,17 +1,16 @@
-﻿from pydantic import BaseModel
+﻿from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 
 class SessionBase(BaseModel):
-    refresh_token_expiretime: datetime
     user_id: int
+    refresh_token_expiretime: datetime
 
 class SessionCreate(SessionBase):
     refresh_token: str
-    session_id: int
     user_agent: str
+    model_config = ConfigDict(from_attributes=True)
 
 class SessionRead(SessionBase):
-    session_id: int
     user_agent: str
 
 class SessionAdminRead(SessionRead):

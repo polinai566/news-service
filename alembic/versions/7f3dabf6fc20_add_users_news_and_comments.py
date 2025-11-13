@@ -32,7 +32,7 @@ def upgrade() -> None:
     op.execute(
         '''
             INSERT INTO news (news_id, header, content, publication_date, author_id, cover)
-            VALUES (1, 'Пропажа ключей в ИТМО', '{"blocks": [{"type": "paragraph", "text": "Сегодня в ИТМО на Песочке пропали ключи от 306 аудитории... Из-за этого отменили все лекции"}]}', '2025-11-05 15:00:00', 1, 'news_cover.jpg')
+            VALUES (1, 'Пропажа ключей в ИТМО', '{"blocks": [{"type": "paragraph", "text": "Сегодня в ИТМО на Песочке пропали ключи от 306 аудитории... Из-за этого отменили все лекции"}]}', '2025-11-05 15:00:00', 2, 'news_cover.jpg')
         '''
     )
     # создание комментариев

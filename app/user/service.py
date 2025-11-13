@@ -27,7 +27,7 @@ class UserService:
     async def list(self, jwt_token: str) -> Sequence[User] | str:
         jwt_payload = check_jwt(jwt_token)
         if not jwt_payload:
-            return "Incorrect token"
+            return "Incorrect access token"
         if jwt_payload["user_role"] == "admin":
             users = await self.db.execute(select(User))
             return users.scalars().all()
@@ -38,7 +38,7 @@ class UserService:
     async def get(self, user_id: int, jwt_token: str) -> User | str:
         jwt_payload = check_jwt(jwt_token)
         if not jwt_payload:
-            return "Incorrect token"
+            return "Incorrect access token"
         if jwt_payload["user_role"] == "admin" or jwt_payload["user_id"] == user_id:
             user = await self.db.execute(select(User).where(User.user_id == user_id))
             user = user.scalar_one_or_none()
@@ -52,13 +52,13 @@ class UserService:
     async def update(self, user_id: int, payload: UserUpdate, jwt_token: str) -> User | str:
         jwt_payload = check_jwt(jwt_token)
         if not jwt_payload:
-            return "Incorrect token"
+            return "Incorrect access token"
         if jwt_payload["user_role"] == "admin" or jwt_payload["user_id"] == user_id:
             user = await self.db.execute(select(User).where(User.user_id == user_id))
             user = user.scalar_one_or_none()
             if not user:
                 return "User not found"
-            user.password = hash_password(user.password) # type: ignore
+            user.password = hash_password(user.password) 
             for field, value in payload.model_dump(exclude_unset=True).items():
                 setattr(user, field, value)
             await self.db.commit()
@@ -71,7 +71,7 @@ class UserService:
     async def delete(self, user_id: int, jwt_token: str) -> None | str:
         jwt_payload = check_jwt(jwt_token)
         if not jwt_payload:
-            return "Incorrect token"
+            return "Incorrect access token"
         if jwt_payload["user_role"] == "admin" or jwt_payload["user_id"] == user_id:
             user = await self.db.execute(select(User).where(User.user_id == user_id))
             user = user.scalar_one_or_none()

@@ -16,4 +16,3 @@ class User(Base):
 
     news = relationship("News", back_populates="author")
     comment = relationship("Comment", back_populates="author")
-    session = relationship("Session", back_populates="user")

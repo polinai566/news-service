@@ -11,7 +11,6 @@ from app.database import Base
 from app.user.models import User
 from app.news.models import News
 from app.comment.models import Comment
-from app.session.models import Session
 
 from alembic import context
 from dotenv import load_dotenv

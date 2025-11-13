@@ -3,12 +3,14 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, Asyn
 from typing import Annotated, AsyncGenerator
 from fastapi import Depends
 from dotenv import load_dotenv
+import redis.asyncio as redis
 import os
-import redis
 
 load_dotenv()
 
 DATABASE_URL = os.environ["DATABASE_URL"]
+REDIS_HOST = os.environ["REDIS_HOST"]
+REDIS_PORT = int(os.environ["REDIS_PORT"])
 
 engine = create_async_engine(DATABASE_URL)
 AsyncSessionLocal = async_sessionmaker(bind=engine)
@@ -27,4 +29,4 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
 
 SessionDep = Annotated[AsyncSession, Depends(get_db_session)]
 
-redis_client = redis.Redis(host="31.44.2.72", port=6379, db=0, password="nTpi5X3xgwQecD")
+redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=0)

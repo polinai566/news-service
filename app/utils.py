@@ -68,7 +68,7 @@ def check_password(password: str, hashed_password: str) -> bool:
     
 def get_privileges(jwt_payload: Any | Literal[False], user_id_to_check: int):
     if jwt_payload:
-        match jwt_payload["user_role"]: # type: ignore
+        match jwt_payload["user_role"]: 
             case "user":
                 if jwt_payload["user_id"] == user_id_to_check:
                     return "user_same"
