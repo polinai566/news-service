@@ -58,7 +58,8 @@
     pip install authlib \
     pip install python-dotenv \
     pip install PyJWT \
-    pip install fastapi-sso
+    pip install fastapi-sso \
+    pip install celery
 
 4. Применить миграции
 
