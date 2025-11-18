@@ -4,7 +4,7 @@ services:
   redis:
     image: redis:7
     container_name: redis
-    command: ["redis-server", "--appendonly", "yes", "--requirepass", "nTpi5X3xgwQecD"]
+    command: ["redis-server", "--appendonly", "yes"]
     restart: unless-stopped
     ports:
       - "6379:6379"
@@ -21,9 +21,7 @@ services:
     container_name: redis-commander
     restart: unless-stopped
     environment:
-      REDIS_HOSTS: local:redis:6379:0:nTpi5X3xgwQecD
-      HTTP_USER: every
-      HTTP_PASSWORD: nTpi5X3xgwQecD
+      REDIS_HOSTS: local:redis:6379:0
     ports:
       - "8081:8081"
     depends_on:

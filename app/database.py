@@ -11,7 +11,6 @@ load_dotenv()
 DATABASE_URL = os.environ["DATABASE_URL"]
 REDIS_HOST = os.environ["REDIS_HOST"]
 REDIS_PORT = int(os.environ["REDIS_PORT"])
-REDIS_PASSWORD = os.environ["REDIS_PASSWORD"]
 
 engine = create_async_engine(DATABASE_URL)
 AsyncSessionLocal = async_sessionmaker(bind=engine)
@@ -30,4 +29,4 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
 
 SessionDep = Annotated[AsyncSession, Depends(get_db_session)]
 
-redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=0, password=REDIS_PASSWORD)
+redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=0)
