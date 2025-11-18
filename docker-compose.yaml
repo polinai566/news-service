@@ -1,10 +1,34 @@
-﻿services:
-    redis:
-        image: redis
-        volumes:
-          - redis-dev:/data
-        ports:
-          - 6379:6379
+﻿version: "3.9"
+
+services:
+  redis:
+    image: redis:7
+    container_name: redis
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "nTpi5X3xgwQecD"]
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis_commander:
+    image: ghcr.io/joeferner/redis-commander:latest
+    container_name: redis-commander
+    restart: unless-stopped
+    environment:
+      REDIS_HOSTS: local:redis:6379:0:nTpi5X3xgwQecD
+      HTTP_USER: every
+      HTTP_PASSWORD: nTpi5X3xgwQecD
+    ports:
+      - "8081:8081"
+    depends_on:
+      redis:
+        condition: service_healthy
 
 volumes:
-  redis-dev:
+  redis_data:

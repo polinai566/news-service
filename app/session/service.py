@@ -1,11 +1,11 @@
-﻿from fastapi import Response, Request, HTTPException
+﻿from fastapi import Response, Request, status, HTTPException
 from fastapi.responses import JSONResponse
 from sqlalchemy import select
 from collections.abc import AsyncIterator
 from datetime import datetime, timezone, timedelta
 from dotenv import load_dotenv
 from app.database import SessionDep, redis_client
-from app.utils import check_password, create_jwt, generation_refresh_token, check_jwt, sso
+from app.utils import check_password, create_jwt, generation_refresh_token, sso
 from app.user.models import User
 from app.user.schemas import UserLogin
 from .schemas import SessionRefreshToken, SessionCreate, SessionAdminRead, SessionRead
@@ -32,7 +32,7 @@ class SessionService:
             return "This email is not registered"
         # проверка пароля
         if not check_password(payload.password, user.password): 
-            return "Incorrect password"
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect password")
         
         # создание JWT токена
         jwt_token = create_jwt(user.user_id, user.user_role) 
@@ -54,25 +54,16 @@ class SessionService:
         await redis_client.setex(f"session:{user.user_id}:{refresh_token}", lifetime, session_json)
         return SessionCreate.model_validate(new_session)
     
-    # получение списка сессий конкретного пользователя (для админа и для самого пользователя)
-    async def list(self, user_id: int, jwt_token: str) -> list[SessionAdminRead] | list[SessionRead] | str:
-        jwt_payload = check_jwt(jwt_token)
-        if not jwt_payload:
-            return "Incorrect access token"
+    # получение списка сессий конкретного пользователя (для админа или для самого пользователя)
+    async def list(self, user_id: int, Schema: SessionAdminRead | SessionRead) -> list[SessionAdminRead] | list[SessionRead]:
         session_keys_iter: AsyncIterator[str] = redis_client.scan_iter(f"session:{user_id}:*") 
         session_keys = [key async for key in session_keys_iter]
         session_list = [
             json.loads(session_data) for key in session_keys
             if (session_data := await redis_client.get(key))
         ]
-        if jwt_payload["user_role"] == "admin":
-            admin_sessions: list[SessionAdminRead] = [SessionAdminRead.model_validate(session) for session in session_list]
-            return admin_sessions
-        if jwt_payload["user_id"] == user_id:
-            user_sessions: list[SessionRead] = [SessionRead.model_validate(session) for session in session_list]
-            return user_sessions
-        else:
-            return "Permission denied"
+        sessions = [Schema.model_validate(session) for session in session_list]
+        return sessions
 
     # обновление refresh токена
     async def put(self, payload: SessionRefreshToken, response: Response, request: Request) -> SessionCreate | str:
@@ -98,12 +89,12 @@ class SessionService:
         expiretime = datetime.fromisoformat(session["refresh_token_expiretime"])
         if datetime.now(timezone.utc) > expiretime:
             await redis_client.delete(key)
-            return "The session expired. Log in again"
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="The session expired. Log in again")
         
         user = await self.db.execute(select(User).where(User.user_id == session["user_id"]))
         user = user.scalar_one_or_none()
         if not user:
-            return "Refresh token not linked to user"
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Refresh token not linked to user")
         
         new_refresh_token = generation_refresh_token()
         jwt_token = create_jwt(session["user_id"], user.user_role)
@@ -124,10 +115,7 @@ class SessionService:
         return SessionCreate.model_validate(new_session)
 
     # удаление сессии (выход)
-    async def delete(self, request: Request, jwt_token: str) -> None | str:
-        jwt_payload = check_jwt(jwt_token)
-        if not jwt_payload:
-            return "Incorrect access token"
+    async def delete(self, request: Request, jwt_payload) -> None | str:
         user_id = jwt_payload['user_id']
         session_keys_iter: AsyncIterator[str] = redis_client.scan_iter(f"session:{user_id}:*")
         session_keys = [key async for key in session_keys_iter]
@@ -136,14 +124,14 @@ class SessionService:
             if (session_data := await redis_client.get(key))
         ]
         if session_list == []:
-            return "Session not found"
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
         user_agent = request.headers.get("User-Agent")
         for i in range(len(session_keys)):
             one_session = session_list[i]
             if one_session["user_agent"] == user_agent:
                 await redis_client.delete(session_keys[i])
                 return "The session was successfully deleted"
-        return "Your User Agent was not found"
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Your User Agent was not found")
     
     # инициализация и перенаправление авторизации через GitHub
     async def auth_init(self):
@@ -152,14 +140,14 @@ class SessionService:
             async with sso:
                 return await sso.get_login_redirect()
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Auth initialization failed: {str(e)}")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Auth initialization failed: {str(e)}")
         
     # проверка логина (подтверждение авторизации через GitHub)
-    async def auth_callback(self, response: Response, request: Request) -> JSONResponse | str:
+    async def auth_callback(self, response: Response, request: Request) -> JSONResponse:
         async with sso:        
             github_user = await sso.verify_and_process(request)
             if not github_user:
-                return "GitHub authorization failed"
+                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="GitHub authorization failed")
         result = await self.db.execute(select(User).where(User.email == github_user.email))
         user = result.scalar_one_or_none()
         # если пользователя с такой почтой нет в базе данных, то добавляем его

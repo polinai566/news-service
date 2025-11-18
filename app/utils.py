@@ -3,7 +3,6 @@ from dotenv import load_dotenv
 from datetime import datetime, timedelta, timezone
 from fastapi_sso.sso.github import GithubSSO
 from argon2 import PasswordHasher
-from typing import Any, Literal
 import jwt
 import random
 import string
@@ -65,20 +64,3 @@ def check_password(password: str, hashed_password: str) -> bool:
         return True
     except Exception:
         return False
-    
-def get_privileges(jwt_payload: Any | Literal[False], user_id_to_check: int):
-    if jwt_payload:
-        match jwt_payload["user_role"]: 
-            case "user":
-                if jwt_payload["user_id"] == user_id_to_check:
-                    return "user_same"
-                else:
-                    return "user_other"
-            case "author":
-                if jwt_payload["user_id"] == user_id_to_check:
-                    return "author_same"
-                else:
-                    return "author_other"
-            case "admin":
-                return "admin"
-    return False

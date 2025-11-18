@@ -1,10 +1,9 @@
 ﻿from typing import Sequence
 from sqlalchemy import select
-
+from fastapi import HTTPException, status
 from app.database import SessionDep, redis_client
 from .models import News
 from .schemas import NewsCreate, NewsUpdate, NewsRead
-from app.utils import check_jwt, get_privileges
 
 import json
 
@@ -13,24 +12,15 @@ class NewsService:
         self.db = db
 
     # создание новости
-    async def create(self, payload: NewsCreate, jwt_token: str) -> News | str:
-        jwt_payload = check_jwt(jwt_token)
-        if not jwt_payload:
-            return "Incorrect access token"
-        if jwt_payload["user_role"] in ("admin", "author"):
-            new_news = News(**payload.model_dump(), author_id = int(jwt_payload["user_id"]))
-            self.db.add(new_news)
-            await self.db.commit()
-            await self.db.refresh(new_news)
-            return new_news
-        else:
-            return "Permission denied"
+    async def create(self, payload: NewsCreate, user_id: int) -> News:
+        new_news = News(**payload.model_dump(), author_id = user_id)
+        self.db.add(new_news)
+        await self.db.commit()
+        await self.db.refresh(new_news)
+        return new_news
     
     # чтение списка новостей
-    async def list(self, jwt_token: str) -> Sequence[NewsRead] | str:
-        jwt_payload = check_jwt(jwt_token)
-        if not jwt_payload:
-            return "Incorrect access token"
+    async def list(self) -> Sequence[NewsRead]:
         cached_news_list = await redis_client.get("news_list_all")
         if cached_news_list:
             news_list_data = json.loads(cached_news_list)
@@ -39,7 +29,7 @@ class NewsService:
         news = await self.db.execute(select(News))
         news_list = news.scalars().all()
         if not news_list:
-            return "No news found"
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No news found")
         news_data_list = [NewsRead.model_validate(news) for news in news_list]
         news_list_data = [news_data.model_dump(mode='json') for news_data in news_data_list]
         news_list_json = json.dumps(news_list_data)
@@ -48,10 +38,7 @@ class NewsService:
         return news_data_list
     
     # чтение новости по индексу
-    async def get(self, news_id: int, jwt_token: str) -> NewsRead | str:
-        jwt_payload = check_jwt(jwt_token)
-        if not jwt_payload:
-            return "Incorrect access token"
+    async def get(self, news_id: int) -> NewsRead:
         cached_news = await redis_client.get(f"news_{news_id}")
         if cached_news:
             news_dict = json.loads(cached_news) # десериализация данных из JSON
@@ -61,7 +48,7 @@ class NewsService:
         news = await self.db.execute(select(News).where(News.news_id == news_id))
         news = news.scalar_one_or_none()
         if not news:
-            return "News not found"
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="News not found")
         news_data = NewsRead.model_validate(news)
         news_json = news_data.model_dump_json() # сериализация данных в JSON
         await redis_client.setex(f"news_{news_id}", 300, news_json) # TTL 5 минут = 300 секунд
@@ -69,40 +56,19 @@ class NewsService:
         return news_data
     
     # обновление новости
-    async def update(self, news_id: int, payload: NewsUpdate, jwt_token: str) -> News | str:
-        jwt_payload = check_jwt(jwt_token)
-        if not jwt_payload:
-            return "Incorrect access token"
-        news = await self.db.execute(select(News).where(News.news_id == news_id))
-        news = news.scalar_one_or_none()
-        if not news:
-            return "News not found"
-        rights = get_privileges(jwt_payload, news.author_id) 
-        if rights in ["admin", "author_same"]:
-            for field, value in payload.model_dump(exclude_unset=True).items():
-                setattr(news, field, value)
-            await self.db.commit()
-            await self.db.refresh(news)
-            await redis_client.delete(f"news_{news_id}")
-            await redis_client.delete("news_list_all")
-            return news
-        else:
-            return "Permission denied"
+    async def update(self, news_id: int, news: News, payload: NewsUpdate) -> News:
+        for field, value in payload.model_dump(exclude_unset=True).items():
+            setattr(news, field, value)
+        await self.db.commit()
+        await self.db.refresh(news)
+        await redis_client.delete(f"news_{news_id}")
+        await redis_client.delete("news_list_all")
+        return news
         
     # удаление новости
-    async def delete(self, news_id: int, jwt_token: str) -> None | str:
-        jwt_payload = check_jwt(jwt_token)
-        if not jwt_payload:
-            return "Incorrect access token"
-        news = await self.db.execute(select(News).where(News.news_id == news_id))
-        news = news.scalar_one_or_none()
-        if not news:
-            return "News not found"
-        rights = get_privileges(jwt_payload, news.author_id) 
-        if rights in ["admin", "author_same"]:
-            await self.db.delete(news)
-            await self.db.commit()
-            await redis_client.delete(f"news_{news_id}")
-            await redis_client.delete("news_list_all")
-            return "The news was successfully deleted"
-        return "Permission denied"
+    async def delete(self, news_id: int, news: News) -> str:
+        await self.db.delete(news)
+        await self.db.commit()
+        await redis_client.delete(f"news_{news_id}")
+        await redis_client.delete("news_list_all")
+        return "The news was successfully deleted"

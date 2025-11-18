@@ -1,10 +1,10 @@
 ﻿from typing import Sequence
 from sqlalchemy import select
-
-from app.database import SessionDep
+from fastapi import HTTPException, status
+from app.database import SessionDep, redis_client
 from .models import User
 from .schemas import UserCreate, UserUpdate
-from app.utils import check_jwt, hash_password
+from app.utils import hash_password
 
 class UserService:
     def __init__(self, db: SessionDep):
@@ -24,61 +24,50 @@ class UserService:
         return new_user
 
     # чтение списка пользователей
-    async def list(self, jwt_token: str) -> Sequence[User] | str:
-        jwt_payload = check_jwt(jwt_token)
-        if not jwt_payload:
-            return "Incorrect access token"
-        if jwt_payload["user_role"] == "admin":
-            users = await self.db.execute(select(User))
-            return users.scalars().all()
-        else:
-            return "Permission denied"
+    async def list(self) -> Sequence[User]:
+        users = await self.db.execute(select(User))
+        users_list = users.scalars().all()
+        if not users_list:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No users found")
+        return users_list
 
     # чтение пользователя по индексу
-    async def get(self, user_id: int, jwt_token: str) -> User | str:
-        jwt_payload = check_jwt(jwt_token)
-        if not jwt_payload:
-            return "Incorrect access token"
-        if jwt_payload["user_role"] == "admin" or jwt_payload["user_id"] == user_id:
-            user = await self.db.execute(select(User).where(User.user_id == user_id))
-            user = user.scalar_one_or_none()
-            if not user:
-                return "User not found"
-            return user
-        else:
-            return "Permission denied"
+    async def get(self, user_id: int) -> User:
+        user = await self.db.execute(select(User).where(User.user_id == user_id))
+        user = user.scalar_one_or_none()
+        if not user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        return user
 
     # обновление пользователя
-    async def update(self, user_id: int, payload: UserUpdate, jwt_token: str) -> User | str:
-        jwt_payload = check_jwt(jwt_token)
-        if not jwt_payload:
-            return "Incorrect access token"
-        if jwt_payload["user_role"] == "admin" or jwt_payload["user_id"] == user_id:
-            user = await self.db.execute(select(User).where(User.user_id == user_id))
-            user = user.scalar_one_or_none()
-            if not user:
-                return "User not found"
-            user.password = hash_password(user.password) 
-            for field, value in payload.model_dump(exclude_unset=True).items():
-                setattr(user, field, value)
-            await self.db.commit()
-            await self.db.refresh(user)
-            return user
-        else:
-            return "Permission denied"
+    async def update(self, user_id: int, payload: UserUpdate) -> User:
+        user = await self.db.execute(select(User).where(User.user_id == user_id))
+        user = user.scalar_one_or_none()
+        if not user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        payload.password = hash_password(payload.password) 
+        for field, value in payload.model_dump(exclude_unset=True).items():
+            setattr(user, field, value)
+        await self.db.commit()
+        await self.db.refresh(user)
+        # при обновлении данных о пользователе удаляем все его активные сессии, если были
+        session_keys_iter = redis_client.scan_iter(f"session:{user.user_id}:*")
+        session_keys = [key async for key in session_keys_iter]
+        if session_keys != []:
+            for key in session_keys: await redis_client.delete(key)
+        return user
 
     # удаление пользователя
-    async def delete(self, user_id: int, jwt_token: str) -> None | str:
-        jwt_payload = check_jwt(jwt_token)
-        if not jwt_payload:
-            return "Incorrect access token"
-        if jwt_payload["user_role"] == "admin" or jwt_payload["user_id"] == user_id:
-            user = await self.db.execute(select(User).where(User.user_id == user_id))
-            user = user.scalar_one_or_none()
-            if not user:
-                return "User not found"
-            await self.db.delete(user)
-            await self.db.commit()
-            return "The user was successfully deleted"
-        else:
-            return "Permission denied"
+    async def delete(self, user_id: int) -> str:
+        user = await self.db.execute(select(User).where(User.user_id == user_id))
+        user = user.scalar_one_or_none()
+        if not user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        await self.db.delete(user)
+        await self.db.commit()
+        # при удалении пользователя удаляем все его активные сессии, если были
+        session_keys_iter = redis_client.scan_iter(f"session:{user.user_id}:*")
+        session_keys = [key async for key in session_keys_iter]
+        if session_keys != []:
+            for key in session_keys: await redis_client.delete(key)
+        return "The user was successfully deleted"
