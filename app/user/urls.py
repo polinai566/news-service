@@ -1,7 +1,6 @@
 ﻿from fastapi import APIRouter, Depends
 from .schemas import UserCreate, UserRead, UserUpdate
 from .service import UserService
-from fastapi.security import OAuth2PasswordBearer
 from app.depends import is_admin, same_user_or_admin
 
 router = APIRouter(tags=["users"])

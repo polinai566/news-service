@@ -78,13 +78,13 @@ class SessionService:
         ]
 
         if len(session_list) > 1:
-            return "Violation of referential integrity"
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Violation of referential integrity")
         if len(session_list) == 0:
-            return "Refresh token is invalid"
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token is invalid")
         key = session_keys[0]
         session = session_list[0]
         if session["user_agent"] != user_agent:
-            "User-Agent is invalid"
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User-Agent is invalid")
         
         expiretime = datetime.fromisoformat(session["refresh_token_expiretime"])
         if datetime.now(timezone.utc) > expiretime:
