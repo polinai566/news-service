@@ -1,9 +1,12 @@
 ﻿from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
-from typing import Annotated, AsyncGenerator
+from sqlalchemy import create_engine
+from typing import Annotated, AsyncGenerator, Generator
 from fastapi import Depends
 from dotenv import load_dotenv
 import redis.asyncio as redis
+import redis
 import os
 
 load_dotenv()
@@ -12,8 +15,13 @@ DATABASE_URL = os.environ["DATABASE_URL"]
 REDIS_HOST = os.environ["REDIS_HOST"]
 REDIS_PORT = int(os.environ["REDIS_PORT"])
 
-engine = create_async_engine(DATABASE_URL)
-AsyncSessionLocal = async_sessionmaker(bind=engine)
+async_engine = create_async_engine(DATABASE_URL)
+AsyncSessionLocal = async_sessionmaker(bind=async_engine)
+
+SYNC_DATABASE_URL = DATABASE_URL.replace('asyncpg', 'psycopg2')
+sync_engine = create_engine(SYNC_DATABASE_URL)
+SyncSession = sessionmaker(bind=sync_engine)
+
 Base = declarative_base()
 
 async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
@@ -27,6 +35,19 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
         finally:
             await session.close()
 
+def get_sync_db_session() -> Generator[Session, None]:
+    with SyncSession() as session:
+        try:
+            yield session
+        except Exception as e:
+            print(e)
+            session.rollback()
+            raise e
+        finally:
+            session.close()
+
 SessionDep = Annotated[AsyncSession, Depends(get_db_session)]
+SyncSessionDep = Annotated[Session, Depends(get_sync_db_session)]
 
 redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=0)
+sync_redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=0)
