@@ -49,18 +49,7 @@
 
 3. Установить необходимые зависимости:
 
-    pip install fastapi \
-    pip install uvicorn \
-    pip install sqlalchemy[asyncio] asyncpg \
-    pip install alembic \
-    pip install pydantic[email] \
-    pip install psycopg2-binary \
-    pip install passlib[argon2] \
-    pip install authlib \
-    pip install python-dotenv \
-    pip install PyJWT \
-    pip install fastapi-sso \
-    pip install celery
+    pip install -r requirements.txt
 
 4. Применить миграции
 

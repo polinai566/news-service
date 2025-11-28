@@ -5,8 +5,8 @@ from sqlalchemy import create_engine
 from typing import Annotated, AsyncGenerator, Generator
 from fastapi import Depends
 from dotenv import load_dotenv
-import redis.asyncio as redis
-import redis
+from redis.asyncio import Redis as AsyncRedis
+from redis import Redis as SyncRedis
 import os
 
 load_dotenv()
@@ -49,5 +49,11 @@ def get_sync_db_session() -> Generator[Session, None]:
 SessionDep = Annotated[AsyncSession, Depends(get_db_session)]
 SyncSessionDep = Annotated[Session, Depends(get_sync_db_session)]
 
-redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=0)
-sync_redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=0)
+try:
+    redis_client = AsyncRedis(host=REDIS_HOST, port=REDIS_PORT, db=0, decode_responses=True)
+    sync_redis_client = SyncRedis(host=REDIS_HOST, port=REDIS_PORT, db=0, decode_responses=True)
+    print(f"Redis clients initialized successfully: {REDIS_HOST}:{REDIS_PORT}")
+except Exception as e:
+    print(f"Failed to initialize Redis clients: {e}")
+    redis_client = None
+    sync_redis_client = None

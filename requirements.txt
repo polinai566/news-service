@@ -1,0 +1,15 @@
+﻿fastapi
+uvicorn
+sqlalchemy[asyncio]
+asyncpg
+alembic
+pydantic[email]
+psycopg2-binary
+python-jose[cryptography]
+passlib[argon2]
+authlib
+python-dotenv
+PyJWT
+fastapi-sso
+redis
+celery
