@@ -1,0 +1,23 @@
+﻿.news-container {
+    padding: 2.7rem;
+    padding-top: 0em;
+}
+
+.news-content {
+    margin-top: 2rem;
+    padding: 2rem;
+    padding-top: 1em;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+}
+
+.news-details {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+}
+
+.news-details p {
+    margin: 0.5rem 0;
+}
