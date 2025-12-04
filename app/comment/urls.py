@@ -13,12 +13,12 @@ async def comment_service(service: CommentService = Depends()) -> CommentService
 async def create_comment(payload: CommentCreate, service: CommentService = Depends(comment_service), jwt_payload = Depends(get_jwt_payload)):
     return await service.create(payload, int(jwt_payload["user_id"]))
 
-@router.get("/", response_model=list[CommentRead])
-async def get_comments(service: CommentService = Depends(comment_service), _ = Depends(get_jwt_payload)):
-    return await service.list()
+@router.get("/news/{news_id}", response_model=list[CommentRead])
+async def get_comments(news_id: int, service: CommentService = Depends(comment_service)):
+    return await service.list(news_id)
 
 @router.get("/{comment_id}", response_model=CommentRead)
-async def get_comment_by_id(comment_id: int, service: CommentService = Depends(comment_service), _ = Depends(get_jwt_payload)):
+async def get_comment_by_id(comment_id: int, service: CommentService = Depends(comment_service)):
     return await service.get(comment_id)
 
 @router.put("/{comment_id}", response_model=CommentRead)

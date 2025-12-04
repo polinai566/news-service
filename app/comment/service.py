@@ -17,9 +17,9 @@ class CommentService:
         await self.db.refresh(new_comment)
         return new_comment
     
-    # чтение списка комментариев
-    async def list(self) -> Sequence[Comment]:
-        comments = await self.db.execute(select(Comment))
+    # чтение списка комментариев конкретной новости
+    async def list(self, news_id) -> Sequence[Comment]:
+        comments = await self.db.execute(select(Comment).where(Comment.news_id == news_id))
         comments_list = comments.scalars().all()
         if not comments_list:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No comments found")

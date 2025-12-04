@@ -52,8 +52,6 @@ SyncSessionDep = Annotated[Session, Depends(get_sync_db_session)]
 try:
     redis_client = AsyncRedis(host=REDIS_HOST, port=REDIS_PORT, db=0, decode_responses=True)
     sync_redis_client = SyncRedis(host=REDIS_HOST, port=REDIS_PORT, db=0, decode_responses=True)
-    print(f"Redis clients initialized successfully: {REDIS_HOST}:{REDIS_PORT}")
 except Exception as e:
-    print(f"Failed to initialize Redis clients: {e}")
     redis_client = None
     sync_redis_client = None

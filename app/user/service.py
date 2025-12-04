@@ -15,7 +15,7 @@ class UserService:
         # проверка уникальности email
         existing_user = await self.db.execute(select(User).where(User.email == payload.email))
         if existing_user.scalar_one_or_none():
-            return "Email already registered"
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
         payload.password = hash_password(payload.password)
         new_user = User(**payload.model_dump())
         self.db.add(new_user)

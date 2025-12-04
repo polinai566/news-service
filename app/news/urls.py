@@ -14,11 +14,11 @@ async def create_news(payload: NewsCreate, service: NewsService = Depends(news_s
     return await service.create(payload, user_id)
 
 @router.get("/", response_model=list[NewsRead])
-async def get_news(service: NewsService = Depends(news_service), _ = Depends(get_jwt_payload)):
+async def get_news(service: NewsService = Depends(news_service)):
     return await service.list()
 
 @router.get("/{news_id}", response_model=NewsRead)
-async def get_news_by_id(news_id: int, service: NewsService = Depends(news_service), _ = Depends(get_jwt_payload)):
+async def get_news_by_id(news_id: int, service: NewsService = Depends(news_service)):
     return await service.get(news_id)
 
 @router.put("/{news_id}", response_model=NewsRead)

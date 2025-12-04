@@ -24,7 +24,7 @@ app.conf.task_retry_backoff_max = 300  # максимальная задержк
 app.conf.beat_schedule = {
     'weekly-digest-every-sunday': {
         'task': 'app.celery.send_weekly_digest',
-        'schedule': crontab(hour=20, minute=45, day_of_week=4),  # Каждое воскресенье в 0:00
+        'schedule': crontab(hour=18, minute=43, day_of_week=5),  # Каждое воскресенье в 0:00
     },
 }
 
