@@ -14,7 +14,34 @@ api.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
+}, (error) => {
+    return Promise.reject(error);
 });
+
+api.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+        const originalRequest = error.config;
+        
+        // ошибка 401 и это не запрос на обновление токена
+        if (error.response?.status === 401 && !originalRequest.url.includes('/session/')) {
+            console.log('Токен недействителен, требуется повторная авторизация');
+            
+            localStorage.removeItem('token');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('session');
+            localStorage.removeItem('user');
+            localStorage.removeItem('userId');
+
+            // если не на странице логина, перенаправление туда
+            if (!window.location.pathname.includes('/login')) {
+                window.location.href = '/login';
+            }
+        }
+        
+        return Promise.reject(error);
+    }
+);
 
 // экспорт методов для работы с API
 
@@ -25,6 +52,12 @@ export const newsAPI = {
   getNewsById: (id) => api.get(`/news/${id}`),
   // получение комментариев к новости
   getCommentsByNews: (newsId) => api.get(`/comment/news/${newsId}`),
+  // создание новости
+  createNews: (newsData) => api.post('/news/', newsData),
+  // обновление новости
+  updateNews: (id, newsData) => api.put(`/news/${id}`, newsData),
+  // удаление новости
+  deleteNews: (id) => api.delete(`/news/${id}`),
 };
 
 export const authAPI = {
@@ -44,28 +77,21 @@ export const authAPI = {
 export const userAPI = {
   // регистрация пользователя
   register: (userData) => api.post('/user/', userData),
-  
-  // получение информации о текущем пользователе
-  getCurrentUser: () => api.get('/user/me'),
-  
+  // получение пользователя по ID 
+  getUserById: (userId) => api.get(`/user/${userId}`),
   // обновление пользователя
   updateUser: (userId, userData) => api.put(`/user/${userId}`, userData),
-  
   // удаление пользователя (для админа)
   deleteUser: (userId) => api.delete(`/user/${userId}`),
 };
 
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // Токен истек или невалиден
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
-    }
-    return Promise.reject(error);
-  }
-);
+export const commentAPI = {
+    // создание комментария
+    createComment: (commentData) => api.post('/comment/', commentData),
+    // обновление комментария
+    updateComment: (id, commentData) => api.put(`/comment/${id}`, commentData),
+    // удаление комментария
+    deleteComment: (id) => api.delete(`/comment/${id}`),
+};
 
 export default api;
