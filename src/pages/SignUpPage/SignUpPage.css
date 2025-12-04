@@ -1,13 +1,13 @@
-﻿.login-container {
+﻿.signup-container {
   max-width: 400px;
   margin: 0 auto;
   padding: 2rem;
   background-color: rgba(255, 255, 255, 0.05);
   border-radius: 8px;
-  box-shadow: 0 4px px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.login-form {
+.signup-form {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -53,10 +53,35 @@
   transition: background-color 0.3s;
 }
 
-.submit-btn:hover {
+.submit-btn:hover:not(:disabled) {
   background-color: #535bf2;
 }
 
-.submit-btn:active {
-  transform: translateY(1px);
+.submit-btn:disabled {
+  background-color: #555;
+  cursor: not-allowed;
+}
+
+.error-message {
+  color: #ff6b6b;
+  background-color: rgba(255, 107, 107, 0.1);
+  padding: 0.75rem;
+  border-radius: 4px;
+  border-left: 4px solid #ff6b6b;
+  margin-top: 1rem;
+}
+
+.login-link {
+  text-align: center;
+  margin-top: 1rem;
+  color: #aaa;
+}
+
+.login-link a {
+  color: #646cff;
+  text-decoration: none;
+}
+
+.login-link a:hover {
+  text-decoration: underline;
 }

@@ -1,10 +1,10 @@
 ﻿import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:8000',
-  headers: {
-    'Content-Type': 'application/json',
-  },
+    baseURL: 'http://localhost:8000',
+    headers: {
+      'Content-Type': 'application/json',
+    },
 });
 
 // добавление токена к запросам, если он есть
@@ -40,5 +40,32 @@ export const authAPI = {
   // выход
   logout: () => api.delete('/session/'),
 };
+
+export const userAPI = {
+  // регистрация пользователя
+  register: (userData) => api.post('/user/', userData),
+  
+  // получение информации о текущем пользователе
+  getCurrentUser: () => api.get('/user/me'),
+  
+  // обновление пользователя
+  updateUser: (userId, userData) => api.put(`/user/${userId}`, userData),
+  
+  // удаление пользователя (для админа)
+  deleteUser: (userId) => api.delete(`/user/${userId}`),
+};
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Токен истек или невалиден
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default api;
