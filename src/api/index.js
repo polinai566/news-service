@@ -7,6 +7,20 @@ const api = axios.create({
     },
 });
 
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+    failedQueue.forEach(prom => {
+        if (error) {
+            prom.reject(error);
+        } else {
+            prom.resolve(token);
+        }
+    });
+    failedQueue = [];
+};
+
 // добавление токена к запросам, если он есть
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
@@ -25,23 +39,78 @@ api.interceptors.response.use(
         
         // ошибка 401 и это не запрос на обновление токена
         if (error.response?.status === 401 && !originalRequest.url.includes('/session/')) {
-            console.log('Токен недействителен, требуется повторная авторизация');
-            
-            localStorage.removeItem('token');
-            localStorage.removeItem('refreshToken');
-            localStorage.removeItem('session');
-            localStorage.removeItem('user');
-            localStorage.removeItem('userId');
 
-            // если не на странице логина, перенаправление туда
-            if (!window.location.pathname.includes('/login')) {
-                window.location.href = '/login';
+            if (isRefreshing) {
+                return new Promise((resolve, reject) => {
+                    failedQueue.push({ resolve, reject });
+                })
+                .then(token => {
+                    originalRequest.headers.Authorization = `Bearer ${token}`;
+                    return api(originalRequest);
+                })
+                .catch(err => {
+                    return Promise.reject(err);
+                });
+            }
+
+            isRefreshing = true;
+            const refreshToken = localStorage.getItem('refreshToken');
+            
+            if (!refreshToken) {
+                console.log('Нет refresh токена, требуется повторная авторизация');
+                logoutAndRedirect();
+                return Promise.reject(error);
+            }
+
+            try {
+                // попытка обновить токен
+                const refreshResponse = await authAPI.refresh(refreshToken);
+                const newJwtToken = refreshResponse.headers['x-jwt'];
+                const newRefreshToken = refreshResponse.data.refresh_token;
+                
+                if (!newJwtToken) {
+                    throw new Error('Новый токен не получен от сервера');
+                }
+                
+                // сохранение новых токенов
+                localStorage.setItem('token', newJwtToken);
+                localStorage.setItem('refreshToken', newRefreshToken);
+                
+                // обновление заголовка оригинального запроса
+                originalRequest.headers.Authorization = `Bearer ${newJwtToken}`;
+                
+                // обработка очереди запросов
+                processQueue(null, newJwtToken);
+                isRefreshing = false;
+                
+                // повторение оригинального запроса
+                return api(originalRequest);
+            } catch (refreshError) {
+                console.error('Ошибка обновления токена:', refreshError);
+                processQueue(refreshError, null);
+                logoutAndRedirect();
+                return Promise.reject(refreshError);
             }
         }
         
         return Promise.reject(error);
     }
 );
+
+// функция для выхода и перенаправления на страницу логина
+const logoutAndRedirect = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('session');
+    localStorage.removeItem('user');
+    localStorage.removeItem('userId');
+    
+    // если не на странице логина, перенаправление туда
+    if (!window.location.pathname.includes('/login') && 
+        !window.location.pathname.includes('/signup')) {
+        window.location.href = '/login';
+    }
+};
 
 // экспорт методов для работы с API
 
@@ -88,6 +157,8 @@ export const userAPI = {
 export const commentAPI = {
     // создание комментария
     createComment: (commentData) => api.post('/comment/', commentData),
+    // получение комментариев к новости
+    getCommentsByNews: (newsId) => api.get(`/comment/news/${newsId}`),
     // обновление комментария
     updateComment: (id, commentData) => api.put(`/comment/${id}`, commentData),
     // удаление комментария

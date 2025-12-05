@@ -4,7 +4,10 @@ import HomePage from './pages/HomePage/HomePage';
 import NewsPage from './pages/NewsPage/NewsPage';
 import LoginPage from './pages/LoginPage/LoginPage';
 import SignUpPage from './pages/SignUpPage/SignUpPage';
-import { userAPI, authAPI } from './api/index';
+import CreateNewsPage from './pages/CreateNewsPage/CreateNewsPage';
+import EditNewsPage from './pages/EditNewsPage/EditNewsPage';
+import { decodeJWT } from './utils/jwtDecoder';
+import { authAPI } from './api/index';
 import './styles/App.css';
 
 function App() {
@@ -19,29 +22,39 @@ function App() {
 
 		if (token && storedUser) {
 			try {
-				// используем сохраненные данные пользователя
-				const userData = JSON.parse(storedUser);
-				console.log('Восстановление пользователя из localStorage:', userData);
-				setUser(userData);
-				setIsAuthenticated(true);
-			} catch (error) {
-				console.error('Ошибка при чтении данных пользователя:', error);
-				handleLogout();
-			}
+				// декодировка токена для получения актуальных данных
+                const decodedToken = decodeJWT(token);
+
+				if (decodedToken && decodedToken.user_id) {
+                    // обновление данных пользователя из токена
+                    const userData = JSON.parse(storedUser);
+                    userData.user_id = parseInt(decodedToken.user_id);
+                    userData.user_role = decodedToken.user_role || userData.user_role || 'user';
+                    
+                    console.log('Восстановление пользователя из localStorage:', userData);
+                    setUser(userData);
+                    setIsAuthenticated(true);
+                } else {
+                    console.log('Токен недействителен или поврежден');
+                    handleLogout();
+                }
+            } catch (error) {
+                console.error('Ошибка при чтении данных пользователя:', error);
+                handleLogout();
+            }
 		} else {
-			console.log('Нет токена или пользователя в localStorage');
-		}
+            console.log('Нет токена или пользователя в localStorage');
+        }
 		
-		// всегда устанавливаем loading в false после проверки
+		// установка loading в false после проверки
 		setLoading(false);
 		
-		// отладочный вывод
 		console.log('App.jsx: Проверка авторизации завершена', {
-			token: !!token,
-			hasUser: !!storedUser,
-			isAuthenticated
-		});
-	}, []);
+            token: !!token,
+            hasUser: !!storedUser,
+            isAuthenticated
+        });
+    }, []);
 
 	const handleLogout = async () => {
 		try {
@@ -65,42 +78,76 @@ function App() {
 		return <div className="loading">Проверка авторизации...</div>;
 	}
 
-	// отладочный вывод для рендера
-	console.log('App.jsx рендер:', { isAuthenticated, user });
+	// проверка пользователя на создание новости
+    const canCreateNews = user?.user_role && ['admin', 'author'].includes(user.user_role);
 
 	return (
-		<Router>
-			<div className="app">
-				<nav>
-					<ul>
-						<li><Link to="/">Главная</Link></li>
-						{isAuthenticated ? (
-							<>
-								<li className="user-info">
-									<span>👤 {user?.user_name || user?.email || 'Пользователь'}</span>
-									<button onClick={handleLogout} className="logout-btn">Выйти</button>
-								</li>
-							</>
-						) : (
-							<>
-								<li><Link to="/login">Войти</Link></li>
-								<li><Link to="/signup">Регистрация</Link></li>
-							</>
-						)}
-					</ul>
-				</nav>
+        <Router>
+            <div className="app">
+                <nav>
+                    <ul>
+                        <li><Link to="/">Главная</Link></li>
+                        
+                        {/* Кнопка создания новости (только для админов и авторов) */}
+                        {isAuthenticated && canCreateNews && (
+                            <li>
+                                <Link to="/news/create" className="create-news-link">
+                                    ➕ Создать новость
+                                </Link>
+                            </li>
+                        )}
+                        
+                        {isAuthenticated ? (
+                            <>
+                                <li className="user-info">
+                                    <span>
+                                        👤 {user?.user_name || user?.email || 'Пользователь'}
+                                        {user?.user_role === 'admin' && (
+                                            <span style={{ 
+                                                marginLeft: '0.5rem',
+                                                backgroundColor: '#ff6b6b',
+                                                color: 'white',
+                                                padding: '0.1rem 0.5rem',
+                                                borderRadius: '4px',
+                                                fontSize: '0.75rem'
+                                            }}>Админ</span>
+                                        )}
+                                        {user?.user_role === 'author' && (
+                                            <span style={{ 
+                                                marginLeft: '0.5rem',
+                                                backgroundColor: '#646cff',
+                                                color: 'white',
+                                                padding: '0.1rem 0.5rem',
+                                                borderRadius: '4px',
+                                                fontSize: '0.75rem'
+                                            }}>Автор</span>
+                                        )}
+                                    </span>
+                                    <button onClick={handleLogout} className="logout-btn">Выйти</button>
+                                </li>
+                            </>
+                        ) : (
+                            <>
+                                <li><Link to="/login">Войти</Link></li>
+                                <li><Link to="/signup">Регистрация</Link></li>
+                            </>
+                        )}
+                    </ul>
+                </nav>
 
-				<div className="content">
-					<Routes>
-						<Route path="/" element={<HomePage />} />
-						<Route path="/news/:id" element={<NewsPage />} />
-						<Route path="/login" element={<LoginPage setIsAuthenticated={setIsAuthenticated} setUser={setUser} />} />
-						<Route path="/signup" element={<SignUpPage />} />
-					</Routes>
-				</div>
-			</div>
-		</Router>
-	);
+                <div className="content">
+                    <Routes>
+                        <Route path="/" element={<HomePage />} />
+                        <Route path="/news/:id" element={<NewsPage />} />
+                        <Route path="/news/create" element={<CreateNewsPage />} />
+                        <Route path="/news/:id/edit" element={<EditNewsPage />} />
+                        <Route path="/login" element={<LoginPage setIsAuthenticated={setIsAuthenticated} setUser={setUser} />} />
+                        <Route path="/signup" element={<SignUpPage />} />
+                    </Routes>
+                </div>
+            </div>
+        </Router>
+    );
 }
 
 export default App;

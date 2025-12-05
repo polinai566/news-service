@@ -119,3 +119,9 @@
     color: #ddd;
     line-height: 1.5;
 }
+
+.news-content-body .news-delimiter {
+    border: none;
+    border-top: 1px solid #555;
+    margin: 1.5rem 0;
+}
