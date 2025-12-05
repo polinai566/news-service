@@ -36,7 +36,7 @@ class SessionService:
         
         # создание JWT токена
         jwt_token = create_jwt(user.user_id, user.user_role) 
-        response.headers["X-JWT"] = str(jwt_token)
+        response.headers["x-jwt"] = str(jwt_token)
         # извлечение user_agent из заголовка запроса
         user_agent = request.headers.get("User-Agent")
         # создание refresh токена
@@ -98,7 +98,7 @@ class SessionService:
         
         new_refresh_token = generation_refresh_token()
         jwt_token = create_jwt(session["user_id"], user.user_role)
-        response.headers["X-JWT"] = str(jwt_token)
+        response.headers["x-jwt"] = str(jwt_token)
         
         new_session = {
             "user_id": user.user_id,
@@ -168,7 +168,7 @@ class SessionService:
             user = new_user
 
         jwt_token = create_jwt(user.user_id, user.user_role)
-        response.headers["X-JWT"] = str(jwt_token)
+        response.headers["x-jwt"] = str(jwt_token)
         user_agent = request.headers.get("User-Agent")
         refresh_token = generation_refresh_token()
         

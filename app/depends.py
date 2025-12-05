@@ -19,11 +19,11 @@ async def is_admin(jwt_payload: str = Depends(get_jwt_payload)):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied")
     
 async def is_same_user(user_id: int, jwt_payload: str = Depends(get_jwt_payload)):
-    if jwt_payload["user_id"] != user_id:
+    if int(jwt_payload["user_id"]) != user_id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied")
     
 async def same_user_or_admin(user_id: int, jwt_payload: str = Depends(get_jwt_payload)):
-    if jwt_payload["user_role"] != "admin" and jwt_payload["user_id"] != user_id:
+    if jwt_payload["user_role"] != "admin" and int(jwt_payload["user_id"]) != user_id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied")
     
 async def author_or_admin(jwt_payload: str = Depends(get_jwt_payload)):
@@ -36,7 +36,7 @@ async def same_news_author_or_admin(news_id: int, db: SessionDep, jwt_payload: s
     news = news.scalar_one_or_none()
     if not news:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="News not found")
-    if jwt_payload["user_role"] != "admin" and jwt_payload["user_id"] != news.author_id:
+    if jwt_payload["user_role"] != "admin" and int(jwt_payload["user_id"]) != news.author_id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied")
     return news
     
@@ -45,6 +45,6 @@ async def same_comment_author_or_admin(comment_id: int, db: SessionDep, jwt_payl
     comment = comment.scalar_one_or_none()
     if not comment:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Comment not found")
-    if jwt_payload["user_role"] != "admin" and jwt_payload["user_id"] != comment.author_id:
+    if jwt_payload["user_role"] != "admin" and int(jwt_payload["user_id"]) != comment.author_id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied")
     return comment

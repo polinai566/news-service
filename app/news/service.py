@@ -18,6 +18,7 @@ class NewsService:
         self.db.add(new_news)
         await self.db.commit()
         await self.db.refresh(new_news)
+        await redis_client.delete("news_list_all")
         task.send_notification_of_new_news(new_news.news_id)
         return new_news
     
