@@ -141,6 +141,10 @@ export const authAPI = {
   }),
   // выход
   logout: () => api.delete('/session/'),
+  // получение сессий пользователя (для админа или самого пользователя)
+  getUserSessions: (userId) => api.get(`/session/${userId}`),
+  // получение сессий пользователя для админа (с refresh токенами)
+  getAdminUserSessions: (userId) => api.get(`/session/admin/${userId}`),
 };
 
 export const userAPI = {
@@ -148,6 +152,8 @@ export const userAPI = {
   register: (userData) => api.post('/user/', userData),
   // получение пользователя по ID 
   getUserById: (userId) => api.get(`/user/${userId}`),
+  // получение всех пользователей (для админа)
+  getAllUsers: () => api.get('/user/'),
   // обновление пользователя
   updateUser: (userId, userData) => api.put(`/user/${userId}`, userData),
   // удаление пользователя (для админа)

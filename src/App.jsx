@@ -6,6 +6,8 @@ import LoginPage from './pages/LoginPage/LoginPage';
 import SignUpPage from './pages/SignUpPage/SignUpPage';
 import CreateNewsPage from './pages/CreateNewsPage/CreateNewsPage';
 import EditNewsPage from './pages/EditNewsPage/EditNewsPage';
+import UserProfilePage from './pages/UserProfilePage/UserProfilePage';
+import AdminUsersPage from './pages/AdminUsersPage/AdminUsersPage';
 import { decodeJWT } from './utils/jwtDecoder';
 import { authAPI } from './api/index';
 import './styles/App.css';
@@ -101,16 +103,14 @@ function App() {
                             <>
                                 <li className="user-info">
                                     <span>
-                                        👤 {user?.user_name || user?.email || 'Пользователь'}
                                         {user?.user_role === 'admin' && (
-                                            <span style={{ 
-                                                marginLeft: '0.5rem',
-                                                backgroundColor: '#ff6b6b',
-                                                color: 'white',
-                                                padding: '0.1rem 0.5rem',
-                                                borderRadius: '4px',
-                                                fontSize: '0.75rem'
-                                            }}>Админ</span>
+                                            <>
+                                                <li>
+                                                    <Link to="/admin/users" className="admin-link">
+                                                        👥 Управление пользователями
+                                                    </Link>
+                                                </li>
+                                            </>
                                         )}
                                         {user?.user_role === 'author' && (
                                             <span style={{ 
@@ -143,6 +143,9 @@ function App() {
                         <Route path="/news/:id/edit" element={<EditNewsPage />} />
                         <Route path="/login" element={<LoginPage setIsAuthenticated={setIsAuthenticated} setUser={setUser} />} />
                         <Route path="/signup" element={<SignUpPage />} />
+                        <Route path="/profile" element={<UserProfilePage />} />
+                        <Route path="/profile/:userId" element={<UserProfilePage />} />
+                        <Route path="/admin/users" element={<AdminUsersPage />} />
                     </Routes>
                 </div>
             </div>
