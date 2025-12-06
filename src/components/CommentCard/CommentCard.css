@@ -10,9 +10,10 @@
 .comment-meta {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     margin-bottom: 1rem;
     color: #aaa;
-    font-size: 0.9rem;
+    font-size: 1rem;
     flex-wrap: wrap;
     gap: 1rem;
 }
@@ -23,13 +24,6 @@
     gap: 0.5rem;
 }
 
-.author-avatar {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    object-fit: cover;
-}
-
 .author-name {
     font-weight: 500;
     color: #ddd;
@@ -37,6 +31,7 @@
 
 .comment-date {
     color: #888;
+    white-space: nowrap;
 }
 
 .comment-content {

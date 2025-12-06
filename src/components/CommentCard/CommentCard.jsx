@@ -1,4 +1,5 @@
 ﻿import React, { useState } from 'react';
+import Avatar from '../Avatar/Avatar';
 import './CommentCard.css';
 
 function CommentCard({comment, currentUser, onDelete, onEdit}) {
@@ -39,18 +40,22 @@ function CommentCard({comment, currentUser, onDelete, onEdit}) {
         }
     };
 
+	const getAvatarUrl = (avatar) => {
+        if (!avatar) return null;
+        if (avatar.startsWith('http')) return avatar;
+        return `http://localhost:8000/static/${avatar}`;
+    };
+
     return (
 	    <div className={`comment-card ${isEditing ? 'comment-editing' : ''}`}>
 	    	<div className="comment-meta">
 	    		<div className="author-info">
-	    			{comment.author.avatar && (
-	    				<img 
-	    					src={comment.author.avatar} 
-	    					alt={comment.author.user_name}
-	    					className="author-avatar"
-	    					onError={(e) => e.target.style.display = 'none'}
-	    				/>
-	    			)}
+	    			<Avatar
+                        src={getAvatarUrl(comment.author?.avatar)}
+                        alt={comment.author?.user_name || 'Автор'}
+                        size="small"
+                        className="author-avatar"
+                    />
 	    			<span className="author-name">
 	    				{comment.author.user_name}
 	    				{comment.author.user_role === 'admin' && (

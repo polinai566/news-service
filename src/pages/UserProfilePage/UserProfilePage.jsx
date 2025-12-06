@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { userAPI } from '../../api/index';
+import Avatar from '../../components/Avatar/Avatar';
 import './UserProfilePage.css';
 
 function UserProfilePage() {
@@ -14,7 +15,7 @@ function UserProfilePage() {
     const [isEditing, setIsEditing] = useState(false);
     const [loadingSave, setLoadingSave] = useState(false);
     
-    // Форма редактирования
+    // форма редактирования
     const [formData, setFormData] = useState({
         user_name: '',
         email: '',
@@ -23,7 +24,7 @@ function UserProfilePage() {
         password: ''
     });
 
-    // Получение текущего пользователя из localStorage
+    // получение текущего пользователя из localStorage
     useEffect(() => {
         const userStr = localStorage.getItem('user');
         if (userStr) {
@@ -35,21 +36,18 @@ function UserProfilePage() {
         }
     }, []);
 
-    // Загрузка данных пользователя
+    // загрузка данных пользователя
     useEffect(() => {
         const fetchUser = async () => {
             try {
                 setLoading(true);
                 setError('');
                 
-                // Определяем, какой userId использовать
                 let targetUserId;
                 
                 if (userId) {
-                    // Если userId указан в URL, используем его
                     targetUserId = parseInt(userId);
                 } else {
-                    // Если userId не указан, пытаемся получить текущего пользователя
                     const userStr = localStorage.getItem('user');
                     if (userStr) {
                         try {
@@ -62,7 +60,6 @@ function UserProfilePage() {
                 }
                 
                 if (!targetUserId) {
-                    // Если нет userId и нет текущего пользователя, перенаправляем на логин
                     setLoading(false);
                     navigate('/login');
                     return;
@@ -72,13 +69,13 @@ function UserProfilePage() {
                 const userData = response.data;
                 setUser(userData);
                 
-                // Заполняем форму данными пользователя
+                // заполнение формы данными пользователя
                 setFormData({
                     user_name: userData.user_name || '',
                     email: userData.email || '',
                     user_role: userData.user_role || 'user',
                     avatar: userData.avatar || '',
-                    password: '' // Пароль не загружаем, пользователь может его изменить
+                    password: ''
                 });
             } catch (err) {
                 console.error('Ошибка загрузки пользователя:', err);
@@ -103,13 +100,11 @@ function UserProfilePage() {
         fetchUser();
     }, [userId, navigate]);
 
-    // Проверка прав на редактирование
     const canEdit = currentUser && user && (
         currentUser.user_id === user.user_id || 
         currentUser.user_role === 'admin'
     );
 
-    // Проверка, может ли текущий пользователь изменять роль
     const canChangeRole = currentUser?.user_role === 'admin' && currentUser.user_id !== user?.user_id;
 
     const handleEdit = () => {
@@ -117,14 +112,14 @@ function UserProfilePage() {
     };
 
     const handleCancel = () => {
-        // Восстанавливаем исходные данные
+        // восстановление исходных данных
         if (user) {
             setFormData({
                 user_name: user.user_name || '',
                 email: user.email || '',
                 user_role: user.user_role || 'user',
                 avatar: user.avatar || '',
-                password: '' // Сбрасываем пароль при отмене
+                password: ''
             });
         }
         setIsEditing(false);
@@ -145,7 +140,6 @@ function UserProfilePage() {
             return;
         }
 
-        // Валидация пароля, если он указан
         if (formData.password && formData.password.trim() !== '') {
             if (formData.password.length < 8) {
                 setError('Пароль должен быть не менее 8 символов');
@@ -155,27 +149,20 @@ function UserProfilePage() {
 
         try {
             setLoadingSave(true);
-            
-            // Формируем данные для обновления
-            // Всегда отправляем user_role, так как это обязательное поле в схеме
             const updateData = {
                 user_name: formData.user_name.trim(),
                 email: formData.email.trim(),
                 user_role: canChangeRole ? formData.user_role : user.user_role
             };
             
-            // Добавляем аватар
             updateData.avatar = (formData.avatar && formData.avatar.trim() !== '') 
                 ? formData.avatar.trim() 
                 : null;
             
-            // Добавляем пароль только если он указан и не пустой
-            // Если пароль не указан, отправляем null (backend должен обработать это корректно)
             if (formData.password && formData.password.trim() !== '') {
                 updateData.password = formData.password.trim();
             } else {
-                // Не отправляем password вообще, если он не указан
-                // Backend должен использовать exclude_unset=True для исключения не установленных полей
+
             }
 
             console.log('Отправка данных для обновления:', { 
@@ -185,10 +172,9 @@ function UserProfilePage() {
 
             const response = await userAPI.updateUser(user.user_id, updateData);
             
-            // Обновляем данные пользователя
+            // обновление данных пользователя
             setUser(response.data);
             
-            // Если редактировали свой профиль, обновляем данные в localStorage
             if (currentUser?.user_id === user.user_id) {
                 const updatedUser = {
                     ...currentUser,
@@ -299,18 +285,13 @@ function UserProfilePage() {
 
             {!isEditing ? (
                 <div className="profile-info">
-                    {user.avatar && (
-                        <div className="avatar-container">
-                            <img 
-                                src={user.avatar.startsWith('http') ? user.avatar : `http://localhost:8000/static/${user.avatar}`}
-                                alt={user.user_name}
-                                className="avatar"
-                                onError={(e) => {
-                                    e.target.style.display = 'none';
-                                }}
-                            />
-                        </div>
-                    )}
+                    <div className="avatar-container">
+                        <Avatar
+                            src={user.avatar ? (user.avatar.startsWith('http') ? user.avatar : `http://localhost:8000/static/${user.avatar}`) : null}
+                            alt={user.user_name}
+                            size="xlarge"
+                        />
+                    </div>
                     
                     <div className="info-section">
                         <div className="info-item">
@@ -374,7 +355,6 @@ function UserProfilePage() {
                         />
                     </div>
 
-                    {/* Поле пароля только для обычных пользователей (не для админа при редактировании чужого профиля) */}
                     {!canChangeRole && (
                         <div className="form-group">
                             <label htmlFor="password">Пароль:</label>
@@ -423,13 +403,16 @@ function UserProfilePage() {
                         />
                         {formData.avatar && (
                             <div className="avatar-preview">
-                                <img 
-                                    src={formData.avatar.startsWith('http') ? formData.avatar : `http://localhost:8000/static/${formData.avatar}`}
-                                    alt="Preview"
-                                    onError={(e) => {
-                                        e.target.style.display = 'none';
-                                    }}
+                                <Avatar
+                                    src={formData.avatar ? (formData.avatar.startsWith('http') ? formData.avatar : `http://localhost:8000/static/${formData.avatar}`) : null}
+                                    alt={formData.user_name}
+                                    size="large"
                                 />
+                                <div className="avatar-hint">
+                                    {formData.avatar 
+                                        ? "Предпросмотр аватарки."
+                                        : "Аватарка не указана. Будет показана первая буква имени."}
+                                </div>
                             </div>
                         )}
                     </div>
