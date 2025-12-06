@@ -1,213 +1,86 @@
-﻿.user-profile-container {
-    max-width: 900px;
+.profile-container {
+    padding: 2.7rem;
+    padding-top: 0em;
+    max-width: 800px;
     margin: 0 auto;
-    padding: 2rem;
-}
-
-.profile-header {
-    margin-bottom: 2rem;
-}
-
-.profile-header h1 {
-    margin-top: 0.5rem;
-    margin-bottom: 0.5rem;
-    color: #ddd;
-}
-
-.profile-subtitle {
-    color: #aaa;
-    font-size: 0.95rem;
-    margin-top: 0;
 }
 
 .back-link {
     display: inline-block;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
     color: #646cff;
     text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.3s;
 }
 
 .back-link:hover {
-    text-decoration: underline;
+    color: #535bf2;
 }
 
-.error-message {
-    color: #ff6b6b;
-    background-color: rgba(255, 107, 107, 0.1);
-    padding: 1rem;
-    border-radius: 4px;
-    border-left: 4px solid #ff6b6b;
-    margin-bottom: 1.5rem;
-}
-
-.profile-content {
-    display: grid;
-    grid-template-columns: 250px 1fr;
-    gap: 2rem;
+.profile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 2rem;
 }
 
-@media (max-width: 768px) {
-    .profile-content {
-        grid-template-columns: 1fr;
-    }
-}
-
-.profile-avatar-section {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1.5rem;
-}
-
-.avatar-container {
-    width: 200px;
-    height: 200px;
-    border-radius: 50%;
-    overflow: hidden;
-    border: 4px solid rgba(255, 255, 255, 0.1);
-    background-color: rgba(255, 255, 255, 0.05);
-}
-
-.user-avatar {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.avatar-placeholder {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 5rem;
-    font-weight: bold;
-    color: #646cff;
-    background-color: rgba(100, 108, 255, 0.1);
-}
-
-.edit-profile-btn {
-    padding: 0.75rem 1.5rem;
-    background-color: rgba(100, 108, 255, 0.2);
-    color: #646cff;
-    border: 1px solid rgba(100, 108, 255, 0.3);
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.95rem;
-    transition: all 0.3s;
-}
-
-.edit-profile-btn:hover {
-    background-color: rgba(100, 108, 255, 0.3);
-}
-
-.profile-info-section {
-    background-color: rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
-    padding: 2rem;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.edit-form h2,
-.view-form h2 {
-    margin-top: 0;
-    margin-bottom: 1.5rem;
+.profile-header h1 {
+    margin: 0;
     color: #ddd;
+    font-size: 2em;
 }
 
-.form-group {
-    margin-bottom: 1.5rem;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-    color: #ddd;
-}
-
-.form-group input,
-.form-group select {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid #555;
-    border-radius: 4px;
-    background-color: rgba(255, 255, 255, 0.1);
-    color: white;
-    font-size: 1rem;
-    transition: border-color 0.3s;
-}
-
-.form-group input:focus,
-.form-group select:focus {
-    outline: none;
-    border-color: #646cff;
-    box-shadow: 0 0 0 2px rgba(100, 108, 255, 0.2);
-}
-
-.form-group input:disabled,
-.form-group select:disabled {
-    background-color: rgba(255, 255, 255, 0.05);
-    cursor: not-allowed;
-}
-
-.form-group input[type="password"] {
-    font-family: monospace;
-}
-
-.form-actions {
-    display: flex;
-    gap: 1rem;
-    margin-top: 2rem;
-}
-
-.save-btn {
-    padding: 0.75rem 1.5rem;
+.edit-btn {
+    padding: 0.5rem 1rem;
     background-color: #646cff;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 1rem;
-    font-weight: 500;
+    font-size: 0.9rem;
     transition: background-color 0.3s;
-    flex: 1;
 }
 
-.save-btn:hover:not(:disabled) {
+.edit-btn:hover {
     background-color: #535bf2;
 }
 
-.save-btn:disabled {
-    background-color: #555;
-    cursor: not-allowed;
+.loading, .error-message {
+    margin-top: 1rem;
+    padding: 1rem;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    text-align: center;
+    color: #ff6b6b;
 }
 
-.cancel-btn {
-    padding: 0.75rem 1.5rem;
-    background-color: #555;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 1rem;
-    font-weight: 500;
-    transition: background-color 0.3s;
-    flex: 1;
+.loading {
+    color: #aaa;
 }
 
-.cancel-btn:hover:not(:disabled) {
-    background-color: #666;
+.profile-info {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 2rem;
 }
 
-.cancel-btn:disabled {
-    background-color: #444;
-    cursor: not-allowed;
+.avatar-container {
+    text-align: center;
+    margin-bottom: 2rem;
 }
 
-.info-grid {
-    display: grid;
+.avatar {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #646cff;
+}
+
+.info-section {
+    display: flex;
+    flex-direction: column;
     gap: 1.5rem;
 }
 
@@ -215,12 +88,21 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.info-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
 }
 
 .info-label {
-    font-weight: 500;
+    font-weight: 600;
     color: #aaa;
     font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .info-value {
@@ -228,221 +110,135 @@
     font-size: 1.1rem;
 }
 
-.role-badge {
-    display: inline-block;
-    padding: 0.3rem 0.8rem;
-    border-radius: 4px;
-    font-size: 0.9rem;
+.profile-form {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
     font-weight: 600;
+    color: #aaa;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-.role-admin {
-    background-color: #ff6b6b;
-    color: white;
+.form-group input,
+.form-group select {
+    padding: 0.75rem;
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    color: #ddd;
+    font-size: 1rem;
+    transition: border-color 0.3s, background-color 0.3s;
 }
 
-.role-author {
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #646cff;
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+.form-group input:disabled,
+.form-group select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.avatar-preview {
+    margin-top: 0.5rem;
+    text-align: center;
+}
+
+.avatar-preview img {
+    max-width: 150px;
+    max-height: 150px;
+    border-radius: 8px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.password-hint {
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    color: #aaa;
+    font-style: italic;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 1rem;
+}
+
+.cancel-btn,
+.submit-btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s;
+}
+
+.cancel-btn {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #ddd;
+}
+
+.cancel-btn:hover:not(:disabled) {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.submit-btn {
     background-color: #646cff;
     color: white;
 }
 
-.role-user {
-    background-color: #555;
-    color: white;
+.submit-btn:hover:not(:disabled) {
+    background-color: #535bf2;
 }
 
-.sessions-section {
-    margin-top: 2rem;
-    padding-top: 2rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+.cancel-btn:disabled,
+.submit-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
-.toggle-sessions-btn {
-    padding: 0.5rem 1rem;
-    background-color: rgba(255, 177, 66, 0.2);
-    color: #ffb142;
-    border: 1px solid rgba(255, 177, 66, 0.3);
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.9rem;
-    transition: background-color 0.3s;
+@media (max-width: 768px) {
+    .profile-container {
+        padding: 1rem;
+    }
+
+    .profile-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .info-item {
+        flex-direction: column;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .cancel-btn,
+    .submit-btn {
+        width: 100%;
+    }
 }
 
-.toggle-sessions-btn:hover {
-    background-color: rgba(255, 177, 66, 0.3);
-}
-
-.sessions-list {
-    margin-top: 1rem;
-    max-height: 300px;
-    overflow-y: auto;
-}
-
-.session-item {
-    padding: 0.75rem;
-    background-color: rgba(255, 255, 255, 0.05);
-    border-radius: 4px;
-    margin-bottom: 0.5rem;
-    border-left: 3px solid #646cff;
-}
-
-.session-info {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
-.session-device {
-    color: #ddd;
-    font-size: 0.9rem;
-    word-break: break-all;
-}
-
-.session-expire {
-    color: #aaa;
-    font-size: 0.8rem;
-}
-
-.no-sessions {
-    text-align: center;
-    color: #aaa;
-    padding: 1rem;
-    font-style: italic;
-}
-
-.profile-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-top: 1.5rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.delete-user-btn {
-    padding: 0.75rem 1.5rem;
-    background-color: rgba(255, 107, 107, 0.2);
-    color: #ff6b6b;
-    border: 1px solid rgba(255, 107, 107, 0.3);
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.95rem;
-    transition: all 0.3s;
-}
-
-.delete-user-btn:hover {
-    background-color: rgba(255, 107, 107, 0.3);
-}
-
-.logout-btn {
-    padding: 0.75rem 1.5rem;
-    background-color: #555;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.95rem;
-    transition: background-color 0.3s;
-}
-
-.logout-btn:hover {
-    background-color: #666;
-}
-
-.delete-confirm-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.8);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-}
-
-.modal-content {
-    background-color: #242424;
-    padding: 2rem;
-    border-radius: 8px;
-    max-width: 500px;
-    width: 90%;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.modal-content h3 {
-    margin-top: 0;
-    margin-bottom: 1rem;
-    color: #ff6b6b;
-}
-
-.modal-content p {
-    color: #ddd;
-    line-height: 1.5;
-    margin-bottom: 1.5rem;
-}
-
-.modal-actions {
-    display: flex;
-    gap: 0.5rem;
-    justify-content: flex-end;
-}
-
-.modal-cancel-btn {
-    padding: 0.6rem 1.2rem;
-    background-color: #555;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.95rem;
-}
-
-.modal-cancel-btn:hover:not(:disabled) {
-    background-color: #666;
-}
-
-.modal-confirm-btn {
-    padding: 0.6rem 1.2rem;
-    background-color: #ff6b6b;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.95rem;
-}
-
-.modal-confirm-btn:hover:not(:disabled) {
-    background-color: #ff5252;
-}
-
-.loading {
-    text-align: center;
-    padding: 3rem;
-    color: #aaa;
-    font-size: 1.2rem;
-}
-
-.avatar-section-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    width: 100%;
-    max-width: 200px;
-}
-
-.delete-user-btn {
-    padding: 0.75rem 1.5rem;
-    background-color: rgba(255, 107, 107, 0.2);
-    color: #ff6b6b;
-    border: 1px solid rgba(255, 107, 107, 0.3);
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.95rem;
-    transition: all 0.3s;
-    width: 100%;
-}
-
-.delete-user-btn:hover {
-    background-color: rgba(255, 107, 107, 0.3);
-}

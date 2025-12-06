@@ -7,7 +7,6 @@ import SignUpPage from './pages/SignUpPage/SignUpPage';
 import CreateNewsPage from './pages/CreateNewsPage/CreateNewsPage';
 import EditNewsPage from './pages/EditNewsPage/EditNewsPage';
 import UserProfilePage from './pages/UserProfilePage/UserProfilePage';
-import AdminUsersPage from './pages/AdminUsersPage/AdminUsersPage';
 import { decodeJWT } from './utils/jwtDecoder';
 import { authAPI } from './api/index';
 import './styles/App.css';
@@ -101,28 +100,10 @@ function App() {
                         
                         {isAuthenticated ? (
                             <>
+                                <li>
+                                    <Link to="/profile">Профиль</Link>
+                                </li>
                                 <li className="user-info">
-                                    <span>
-                                        {user?.user_role === 'admin' && (
-                                            <>
-                                                <li>
-                                                    <Link to="/admin/users" className="admin-link">
-                                                        👥 Управление пользователями
-                                                    </Link>
-                                                </li>
-                                            </>
-                                        )}
-                                        {user?.user_role === 'author' && (
-                                            <span style={{ 
-                                                marginLeft: '0.5rem',
-                                                backgroundColor: '#646cff',
-                                                color: 'white',
-                                                padding: '0.1rem 0.5rem',
-                                                borderRadius: '4px',
-                                                fontSize: '0.75rem'
-                                            }}>Автор</span>
-                                        )}
-                                    </span>
                                     <button onClick={handleLogout} className="logout-btn">Выйти</button>
                                 </li>
                             </>
@@ -145,7 +126,6 @@ function App() {
                         <Route path="/signup" element={<SignUpPage />} />
                         <Route path="/profile" element={<UserProfilePage />} />
                         <Route path="/profile/:userId" element={<UserProfilePage />} />
-                        <Route path="/admin/users" element={<AdminUsersPage />} />
                     </Routes>
                 </div>
             </div>

@@ -70,13 +70,13 @@ function NewsPage() {
                 text: text
             });
             
-            // Добавляем новый комментарий в начало списка
+            // добавляем новый комментарий в начало списка
             setComments([response.data, ...comments]);
         } catch (err) {
             console.error('Ошибка при создании комментария:', err);
             
             if (err.response?.status === 401) {
-                // Токен недействителен, перенаправляем на логин
+                // токен недействителен, перенаправляем на логин
                 localStorage.removeItem('token');
                 localStorage.removeItem('user');
                 navigate('/login');
@@ -205,7 +205,6 @@ function NewsPage() {
                 goAhead={false}
             />
             
-            {/* Кнопки управления новостью (если есть права) */}
             {canEditNews && (
                 <div className="news-management" style={{ marginTop: '1rem', marginBottom: '2rem' }}>
                     <div className="news-actions" style={{ display: 'flex', gap: '0.5rem' }}>
@@ -251,14 +250,12 @@ function NewsPage() {
             <div className="comments-section">
                 <h2>Комментарии ({comments.length})</h2>
                 
-                {/* Форма добавления комментария */}
                 <CommentForm 
                     onSubmit={handleAddComment}
                     isAuthenticated={!!currentUser}
                     loading={commentLoading}
                 />
                 
-                {/* Список комментариев */}
                 {comments.length === 0 ? (
                     <div className="no-comments">
                         <p>Комментариев пока нет. Будьте первым!</p>

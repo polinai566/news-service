@@ -1,87 +1,87 @@
-﻿import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import { userAPI, authAPI } from '../../api/index';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { userAPI } from '../../api/index';
 import './UserProfilePage.css';
 
 function UserProfilePage() {
     const { userId } = useParams();
     const navigate = useNavigate();
     
-    const [profileUser, setProfileUser] = useState(null);
+    const [user, setUser] = useState(null);
     const [currentUser, setCurrentUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [isEditing, setIsEditing] = useState(false);
-    const [editForm, setEditForm] = useState({
+    const [loadingSave, setLoadingSave] = useState(false);
+    
+    // Форма редактирования
+    const [formData, setFormData] = useState({
         user_name: '',
         email: '',
-        user_role: 'user',
+        user_role: '',
         avatar: '',
         password: ''
     });
-    const [sessions, setSessions] = useState([]);
-    const [showSessions, setShowSessions] = useState(false);
-    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
 
+    // Получение текущего пользователя из localStorage
     useEffect(() => {
-        const loadData = async () => {
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+            try {
+                setCurrentUser(JSON.parse(userStr));
+            } catch (e) {
+                console.error('Ошибка при чтении пользователя из localStorage:', e);
+            }
+        }
+    }, []);
+
+    // Загрузка данных пользователя
+    useEffect(() => {
+        const fetchUser = async () => {
             try {
                 setLoading(true);
+                setError('');
                 
-                // загрузка текущего пользователя
-                const userStr = localStorage.getItem('user');
-                const token = localStorage.getItem('token');
+                // Определяем, какой userId использовать
+                let targetUserId;
                 
-                if (!userStr || !token) {
+                if (userId) {
+                    // Если userId указан в URL, используем его
+                    targetUserId = parseInt(userId);
+                } else {
+                    // Если userId не указан, пытаемся получить текущего пользователя
+                    const userStr = localStorage.getItem('user');
+                    if (userStr) {
+                        try {
+                            const parsedUser = JSON.parse(userStr);
+                            targetUserId = parsedUser.user_id;
+                        } catch (e) {
+                            console.error('Ошибка при чтении пользователя:', e);
+                        }
+                    }
+                }
+                
+                if (!targetUserId) {
+                    // Если нет userId и нет текущего пользователя, перенаправляем на логин
+                    setLoading(false);
                     navigate('/login');
                     return;
                 }
-                
-                const currentUserData = JSON.parse(userStr);
-                setCurrentUser(currentUserData);
-                
-                // определение профиля для загрузки
-                let targetUserId;
-                if (userId) {
-                    // проверка прав: админ может смотреть любой профиль
-                    if (currentUserData.user_role !== 'admin' && currentUserData.user_id !== parseInt(userId)) {
-                        setError('У вас нет прав для просмотра этого профиля');
-                        setLoading(false);
-                        return;
-                    }
-                    targetUserId = parseInt(userId);
-                } else {
-                    // если userId не указан, показываем профиль текущего пользователя
-                    targetUserId = currentUserData.user_id;
-                }
-                
-                // загрзка данных профиля
+
                 const response = await userAPI.getUserById(targetUserId);
-                setProfileUser(response.data);
+                const userData = response.data;
+                setUser(userData);
                 
-                // заполнение формы редактирования
-                setEditForm({
-                    user_name: response.data.user_name || '',
-                    email: response.data.email || '',
-                    user_role: response.data.user_role || 'user',
-                    avatar: response.data.avatar || '',
-                    password: ''
+                // Заполняем форму данными пользователя
+                setFormData({
+                    user_name: userData.user_name || '',
+                    email: userData.email || '',
+                    user_role: userData.user_role || 'user',
+                    avatar: userData.avatar || '',
+                    password: '' // Пароль не загружаем, пользователь может его изменить
                 });
-                
-                // загрузка сессии пользователя (только для админа или самого пользователя)
-                if (currentUserData.user_role === 'admin' || currentUserData.user_id === targetUserId) {
-                    try {
-                        const sessionsResponse = await authAPI.getUserSessions(targetUserId);
-                        setSessions(sessionsResponse.data || []);
-                    } catch (sessionsErr) {
-                        console.warn('Не удалось загрузить сессии:', sessionsErr);
-                    }
-                }
-                
-                setLoading(false);
             } catch (err) {
-                console.error('Ошибка загрузки профиля:', err);
+                console.error('Ошибка загрузки пользователя:', err);
                 
                 if (err.response?.status === 401) {
                     setError('Сессия истекла. Пожалуйста, войдите снова.');
@@ -93,60 +93,103 @@ function UserProfilePage() {
                 } else if (err.response?.status === 404) {
                     setError('Пользователь не найден');
                 } else {
-                    setError('Не удалось загрузить профиль');
+                    setError('Не удалось загрузить данные пользователя');
                 }
-                
+            } finally {
                 setLoading(false);
             }
         };
-        
-        loadData();
+
+        fetchUser();
     }, [userId, navigate]);
 
-    const handleEditChange = (e) => {
-        const { name, value } = e.target;
-        setEditForm(prev => ({
-            ...prev,
-            [name]: value
-        }));
+    // Проверка прав на редактирование
+    const canEdit = currentUser && user && (
+        currentUser.user_id === user.user_id || 
+        currentUser.user_role === 'admin'
+    );
+
+    // Проверка, может ли текущий пользователь изменять роль
+    const canChangeRole = currentUser?.user_role === 'admin' && currentUser.user_id !== user?.user_id;
+
+    const handleEdit = () => {
+        setIsEditing(true);
     };
 
-    const handleSaveProfile = async () => {
-        if (!editForm.user_name.trim() || !editForm.email.trim()) {
-            setError('Имя и email обязательны для заполнения');
+    const handleCancel = () => {
+        // Восстанавливаем исходные данные
+        if (user) {
+            setFormData({
+                user_name: user.user_name || '',
+                email: user.email || '',
+                user_role: user.user_role || 'user',
+                avatar: user.avatar || '',
+                password: '' // Сбрасываем пароль при отмене
+            });
+        }
+        setIsEditing(false);
+        setError('');
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+
+        if (!formData.user_name.trim()) {
+            setError('Имя пользователя обязательно');
             return;
         }
 
-        setIsSubmitting(true);
-        setError('');
+        if (!formData.email.trim() || !formData.email.includes('@')) {
+            setError('Введите корректный email');
+            return;
+        }
+
+        // Валидация пароля, если он указан
+        if (formData.password && formData.password.trim() !== '') {
+            if (formData.password.length < 8) {
+                setError('Пароль должен быть не менее 8 символов');
+                return;
+            }
+        }
 
         try {
-            const targetUserId = userId ? parseInt(userId) : currentUser.user_id;
+            setLoadingSave(true);
             
-            // подготовка данных для отправки
+            // Формируем данные для обновления
+            // Всегда отправляем user_role, так как это обязательное поле в схеме
             const updateData = {
-                user_name: editForm.user_name.trim(),
-                email: editForm.email.trim(),
-                avatar: editForm.avatar.trim() || null
+                user_name: formData.user_name.trim(),
+                email: formData.email.trim(),
+                user_role: canChangeRole ? formData.user_role : user.user_role
             };
             
-            // только админ может менять роль
-            if (currentUser.user_role === 'admin') {
-                updateData.user_role = editForm.user_role;
+            // Добавляем аватар
+            updateData.avatar = (formData.avatar && formData.avatar.trim() !== '') 
+                ? formData.avatar.trim() 
+                : null;
+            
+            // Добавляем пароль только если он указан и не пустой
+            // Если пароль не указан, отправляем null (backend должен обработать это корректно)
+            if (formData.password && formData.password.trim() !== '') {
+                updateData.password = formData.password.trim();
+            } else {
+                // Не отправляем password вообще, если он не указан
+                // Backend должен использовать exclude_unset=True для исключения не установленных полей
             }
+
+            console.log('Отправка данных для обновления:', { 
+                ...updateData, 
+                password: updateData.password ? '***' : 'не указан' 
+            });
+
+            const response = await userAPI.updateUser(user.user_id, updateData);
             
-            // если указан пароль, добавляем его
-            if (editForm.password.trim()) {
-                updateData.password = editForm.password.trim();
-            }
+            // Обновляем данные пользователя
+            setUser(response.data);
             
-            const response = await userAPI.updateUser(targetUserId, updateData);
-            
-            // обновляем данные профиля
-            setProfileUser(response.data);
-            
-            // если это профиль текущего пользователя, обновляем данные в localStorage
-            if (!userId || targetUserId === currentUser.user_id) {
+            // Если редактировали свой профиль, обновляем данные в localStorage
+            if (currentUser?.user_id === user.user_id) {
                 const updatedUser = {
                     ...currentUser,
                     user_name: response.data.user_name,
@@ -155,384 +198,260 @@ function UserProfilePage() {
                     avatar: response.data.avatar
                 };
                 localStorage.setItem('user', JSON.stringify(updatedUser));
-                setCurrentUser(updatedUser);
             }
-            
-            setIsEditing(false);
-            setEditForm(prev => ({ ...prev, password: '' })); // очистка поля пароля
             
             alert('Профиль успешно обновлен!');
+            setIsEditing(false);
         } catch (err) {
-            console.error('Ошибка обновления профиля:', err);
+            console.error('Ошибка при обновлении профиля:', err);
+            console.error('Детали ошибки:', err.response?.data);
             
             if (err.response?.status === 401) {
                 setError('Сессия истекла. Пожалуйста, войдите снова.');
                 localStorage.removeItem('token');
                 localStorage.removeItem('user');
                 setTimeout(() => navigate('/login'), 2000);
-            } else if (err.response?.status === 400) {
-                setError('Некорректные данные: ' + (err.response.data?.detail || ''));
             } else if (err.response?.status === 403) {
                 setError('У вас нет прав для редактирования этого профиля');
+            } else if (err.response?.status === 400) {
+                const detail = err.response.data?.detail;
+                if (typeof detail === 'string') {
+                    setError('Некорректные данные: ' + detail);
+                } else if (Array.isArray(detail)) {
+                    const errors = detail.map(e => e.msg || e.message || JSON.stringify(e)).join(', ');
+                    setError('Ошибка валидации: ' + errors);
+                } else {
+                    setError('Некорректные данные: ' + JSON.stringify(detail));
+                }
+            } else if (err.response?.status === 409) {
+                setError('Пользователь с таким email уже существует');
+            } else if (err.response?.status === 422) {
+                const detail = err.response.data?.detail;
+                if (typeof detail === 'string') {
+                    setError('Ошибка валидации: ' + detail);
+                } else if (Array.isArray(detail)) {
+                    const errors = detail.map(e => `${e.loc?.join('.')}: ${e.msg}`).join(', ');
+                    setError('Ошибка валидации: ' + errors);
+                } else {
+                    setError('Ошибка валидации данных');
+                }
+            } else if (err.response?.data) {
+                const detail = err.response.data?.detail || err.response.data?.message || JSON.stringify(err.response.data);
+                setError('Ошибка: ' + detail);
             } else {
-                setError('Не удалось обновить профиль');
+                setError('Не удалось обновить профиль. Попробуйте еще раз.');
             }
         } finally {
-            setIsSubmitting(false);
+            setLoadingSave(false);
         }
     };
 
-    const handleDeleteUser = async () => {
-        if (!window.confirm('Вы уверены, что хотите удалить этого пользователя? Это действие нельзя отменить.')) {
-            return;
-        }
-
-        try {
-            const targetUserId = userId ? parseInt(userId) : currentUser.user_id;
-            await userAPI.deleteUser(targetUserId);
-            
-            alert('Пользователь успешно удален');
-            
-            // если удаляем себя, выходим из системы
-            if (!userId || targetUserId === currentUser.user_id) {
-                handleLogout();
-            } else {
-                // если удаляем другого пользователя, возвращаемся на главную
-                navigate('/');
-            }
-        } catch (err) {
-            console.error('Ошибка удаления пользователя:', err);
-            
-            if (err.response?.status === 401) {
-                setError('Сессия истекла. Пожалуйста, войдите снова.');
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
-                setTimeout(() => navigate('/login'), 2000);
-            } else if (err.response?.status === 403) {
-                setError('У вас нет прав для удаления этого пользователя');
-            } else if (err.response?.status === 404) {
-                setError('Пользователь не найден');
-            } else {
-                setError('Не удалось удалить пользователя');
-            }
-        }
-    };
-
-    const handleLogout = async () => {
-        try {
-            await authAPI.logout();
-        } catch (error) {
-            console.error('Ошибка при выходе:', error);
-        } finally {
-            localStorage.removeItem('token');
-            localStorage.removeItem('refreshToken');
-            localStorage.removeItem('session');
-            localStorage.removeItem('user');
-            localStorage.removeItem('userId');
-            navigate('/login');
-        }
-    };
-
-    const formatDate = (dateString) => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('ru-RU', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    };
-
-    const formatSessionDate = (dateString) => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('ru-RU', {
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
     };
 
     if (loading) {
         return (
-            <div className="user-profile-container">
+            <div className="profile-container">
                 <div className="loading">Загрузка профиля...</div>
             </div>
         );
     }
 
-    if (error && !profileUser) {
+    if (error && !user) {
         return (
-            <div className="user-profile-container">
-                <div className="error-message">
-                    {error}
-                    <Link to="/" className="back-link">← На главную</Link>
-                </div>
+            <div className="profile-container">
+                <div className="error-message">{error}</div>
+                <Link to="/" className="back-link">← Вернуться на главную</Link>
             </div>
         );
     }
 
-    const isOwnProfile = !userId || parseInt(userId) === currentUser?.user_id;
-    const canEdit = isOwnProfile || currentUser?.user_role === 'admin';
-    const canDelete = currentUser?.user_role === 'admin' || isOwnProfile;
-    const canViewSessions = isOwnProfile || currentUser?.user_role === 'admin';
+    if (!user) {
+        return (
+            <div className="profile-container">
+                <div className="error-message">Пользователь не найден</div>
+                <Link to="/" className="back-link">← Вернуться на главную</Link>
+            </div>
+        );
+    }
+
+    const isOwnProfile = currentUser?.user_id === user.user_id;
 
     return (
-        <div className="user-profile-container">
+        <div className="profile-container">
+            <Link to="/" className="back-link">← Вернуться на главную</Link>
+            
             <div className="profile-header">
-                <Link to="/" className="back-link">← На главную</Link>
                 <h1>Профиль пользователя</h1>
-                {!isOwnProfile && (
-                    <p className="profile-subtitle">
-                        Просмотр профиля другого пользователя
-                    </p>
+                {canEdit && !isEditing && (
+                    <button onClick={handleEdit} className="edit-btn">
+                        ✏️ Редактировать
+                    </button>
                 )}
             </div>
 
-            {error && (
-                <div className="error-message">{error}</div>
-            )}
+            {error && <div className="error-message">{error}</div>}
 
-            <div className="profile-content">
-                <div className="profile-avatar-section">
-                    <div className="avatar-container">
-                        {profileUser?.avatar ? (
+            {!isEditing ? (
+                <div className="profile-info">
+                    {user.avatar && (
+                        <div className="avatar-container">
                             <img 
-                                src={profileUser.avatar} 
-                                alt={profileUser.user_name} 
-                                className="user-avatar"
+                                src={user.avatar.startsWith('http') ? user.avatar : `http://localhost:8000/static/${user.avatar}`}
+                                alt={user.user_name}
+                                className="avatar"
+                                onError={(e) => {
+                                    e.target.style.display = 'none';
+                                }}
                             />
-                        ) : (
-                            <div className="avatar-placeholder">
-                                {profileUser?.user_name?.charAt(0)?.toUpperCase() || 'U'}
+                        </div>
+                    )}
+                    
+                    <div className="info-section">
+                        <div className="info-item">
+                            <span className="info-label">Имя пользователя:</span>
+                            <span className="info-value">{user.user_name}</span>
+                        </div>
+                        
+                        <div className="info-item">
+                            <span className="info-label">Email:</span>
+                            <span className="info-value">{user.email}</span>
+                        </div>
+                        
+                        <div className="info-item">
+                            <span className="info-label">Роль:</span>
+                            <span className="info-value">
+                                {user.user_role === 'admin' && '👑 Администратор'}
+                                {user.user_role === 'author' && '✍️ Автор'}
+                                {user.user_role === 'user' && '👤 Пользователь'}
+                            </span>
+                        </div>
+                        
+                        <div className="info-item">
+                            <span className="info-label">Дата регистрации:</span>
+                            <span className="info-value">
+                                {new Date(user.registration_date).toLocaleDateString('ru-RU', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric'
+                                })}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            ) : (
+                <form onSubmit={handleSubmit} className="profile-form">
+                    <div className="form-group">
+                        <label htmlFor="user_name">Имя пользователя:</label>
+                        <input
+                            id="user_name"
+                            name="user_name"
+                            type="text"
+                            value={formData.user_name}
+                            onChange={handleInputChange}
+                            required
+                            placeholder="Введите имя пользователя"
+                            disabled={loadingSave}
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="email">Email:</label>
+                        <input
+                            id="email"
+                            name="email"
+                            type="email"
+                            value={formData.email}
+                            onChange={handleInputChange}
+                            required
+                            placeholder="Введите email"
+                            disabled={loadingSave}
+                        />
+                    </div>
+
+                    {/* Поле пароля только для обычных пользователей (не для админа при редактировании чужого профиля) */}
+                    {!canChangeRole && (
+                        <div className="form-group">
+                            <label htmlFor="password">Пароль:</label>
+                            <input
+                                id="password"
+                                name="password"
+                                type="password"
+                                value={formData.password}
+                                onChange={handleInputChange}
+                                placeholder="••••••••"
+                                disabled={loadingSave}
+                            />
+                            <div className="password-hint">
+                                Оставьте поле пустым, чтобы не менять пароль. Введите новый пароль, чтобы изменить его.
+                            </div>
+                        </div>
+                    )}
+
+                    {canChangeRole && (
+                        <div className="form-group">
+                            <label htmlFor="user_role">Роль:</label>
+                            <select
+                                id="user_role"
+                                name="user_role"
+                                value={formData.user_role}
+                                onChange={handleInputChange}
+                                disabled={loadingSave}
+                            >
+                                <option value="user">👤 Пользователь</option>
+                                <option value="author">✍️ Автор</option>
+                                <option value="admin">👑 Администратор</option>
+                            </select>
+                        </div>
+                    )}
+
+                    <div className="form-group">
+                        <label htmlFor="avatar">Аватар (URL):</label>
+                        <input
+                            id="avatar"
+                            name="avatar"
+                            type="text"
+                            value={formData.avatar}
+                            onChange={handleInputChange}
+                            placeholder="Введите URL изображения (опционально)"
+                            disabled={loadingSave}
+                        />
+                        {formData.avatar && (
+                            <div className="avatar-preview">
+                                <img 
+                                    src={formData.avatar.startsWith('http') ? formData.avatar : `http://localhost:8000/static/${formData.avatar}`}
+                                    alt="Preview"
+                                    onError={(e) => {
+                                        e.target.style.display = 'none';
+                                    }}
+                                />
                             </div>
                         )}
                     </div>
-                    
-                    {!isEditing && canEdit && (
-                        <div className="avatar-section-actions">
-                            <button 
-                                onClick={() => setIsEditing(true)}
-                                className="edit-profile-btn"
-                            >
-                                ✏️ Редактировать профиль
-                            </button>
 
-                            {canDelete && (
-                                <button
-                                    onClick={() => setShowDeleteConfirm(true)}
-                                    className="delete-user-btn"
-                                >
-                                    🗑️ Удалить профиль
-                                </button>
-                            )}
-                        </div>
-                    )}
-                </div>
-
-                <div className="profile-info-section">
-                    {isEditing ? (
-                        <div className="edit-form">
-                            <h2>Редактирование профиля</h2>
-                            
-                            <div className="form-group">
-                                <label htmlFor="user_name">Имя пользователя:</label>
-                                <input
-                                    type="text"
-                                    id="user_name"
-                                    name="user_name"
-                                    value={editForm.user_name}
-                                    onChange={handleEditChange}
-                                    disabled={isSubmitting}
-                                    required
-                                />
-                            </div>
-                            
-                            <div className="form-group">
-                                <label htmlFor="email">Email:</label>
-                                <input
-                                    type="email"
-                                    id="email"
-                                    name="email"
-                                    value={editForm.email}
-                                    onChange={handleEditChange}
-                                    disabled={isSubmitting}
-                                    required
-                                />
-                            </div>
-                            
-                            {currentUser?.user_role === 'admin' && (
-                                <div className="form-group">
-                                    <label htmlFor="user_role">Роль:</label>
-                                    <select
-                                        id="user_role"
-                                        name="user_role"
-                                        value={editForm.user_role}
-                                        onChange={handleEditChange}
-                                        disabled={isSubmitting}
-                                    >
-                                        <option value="user">Пользователь</option>
-                                        <option value="author">Автор</option>
-                                        <option value="admin">Администратор</option>
-                                    </select>
-                                </div>
-                            )}
-                            
-                            <div className="form-group">
-                                <label htmlFor="avatar">URL аватара:</label>
-                                <input
-                                    type="text"
-                                    id="avatar"
-                                    name="avatar"
-                                    value={editForm.avatar}
-                                    onChange={handleEditChange}
-                                    disabled={isSubmitting}
-                                    placeholder="https://example.com/avatar.jpg"
-                                />
-                            </div>
-                            
-                            <div className="form-group">
-                                <label htmlFor="password">Новый пароль:</label>
-                                <input
-                                    type="password"
-                                    id="password"
-                                    name="password"
-                                    value={editForm.password}
-                                    onChange={handleEditChange}
-                                    disabled={isSubmitting}
-                                    placeholder="Введите новый пароль"
-                                />
-                            </div>
-                            
-                            <div className="form-actions">
-                                <button
-                                    onClick={() => {
-                                        setIsEditing(false);
-                                        setEditForm({
-                                            user_name: profileUser.user_name,
-                                            email: profileUser.email,
-                                            user_role: profileUser.user_role,
-                                            avatar: profileUser.avatar || '',
-                                            password: ''
-                                        });
-                                    }}
-                                    disabled={isSubmitting}
-                                    className="cancel-btn"
-                                >
-                                    Отмена
-                                </button>
-                                <button
-                                    onClick={handleSaveProfile}
-                                    disabled={isSubmitting}
-                                    className="save-btn"
-                                >
-                                    {isSubmitting ? 'Сохранение...' : 'Сохранить'}
-                                </button>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="view-form">
-                            <h2>Информация о пользователе</h2>
-                            
-                            <div className="info-grid">
-                                <div className="info-item">
-                                    <span className="info-label">Имя:</span>
-                                    <span className="info-value">{profileUser?.user_name}</span>
-                                </div>
-                                
-                                <div className="info-item">
-                                    <span className="info-label">Email:</span>
-                                    <span className="info-value">{profileUser?.email}</span>
-                                </div>
-                                
-                                <div className="info-item">
-                                    <span className="info-label">Роль:</span>
-                                    <span className={`info-value role-badge role-${profileUser?.user_role}`}>
-                                        {profileUser?.user_role === 'admin' ? 'Администратор' : 
-                                         profileUser?.user_role === 'author' ? 'Автор' : 'Пользователь'}
-                                    </span>
-                                </div>
-                                
-                                <div className="info-item">
-                                    <span className="info-label">Дата регистрации:</span>
-                                    <span className="info-value">
-                                        {profileUser?.registration_date ? formatDate(profileUser.registration_date) : 'Неизвестно'}
-                                    </span>
-                                </div>
-                                
-                                {profileUser?.avatar && (
-                                    <div className="info-item">
-                                        <span className="info-label">Аватар:</span>
-                                        <span className="info-value">
-                                            <a href={profileUser.avatar} target="_blank" rel="noopener noreferrer">
-                                                Ссылка
-                                            </a>
-                                        </span>
-                                    </div>
-                                )}
-                            </div>
-                            
-                            {canViewSessions && (
-                                <div className="sessions-section">
-                                    <button
-                                        onClick={() => setShowSessions(!showSessions)}
-                                        className="toggle-sessions-btn"
-                                    >
-                                        {showSessions ? 'Скрыть' : 'Показать'} активные сессии ({sessions.length})
-                                    </button>
-                                    
-                                    {showSessions && (
-                                        <div className="sessions-list">
-                                            {sessions.length === 0 ? (
-                                                <p className="no-sessions">Нет активных сессий</p>
-                                            ) : (
-                                                sessions.map((session, index) => (
-                                                    <div key={index} className="session-item">
-                                                        <div className="session-info">
-                                                            <span className="session-device">
-                                                                {session.user_agent || 'Неизвестное устройство'}
-                                                            </span>
-                                                            <span className="session-expire">
-                                                                Истекает: {formatSessionDate(session.refresh_token_expiretime)}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                ))
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {showDeleteConfirm && (
-                <div className="delete-confirm-modal">
-                    <div className="modal-content">
-                        <h3>Подтверждение удаления</h3>
-                        <p>
-                            Вы уверены, что хотите удалить пользователя <strong>{profileUser?.user_name}</strong>?
-                            Это действие нельзя отменить. Все новости и комментарии пользователя также будут удалены.
-                        </p>
-                        <div className="modal-actions">
-                            <button
-                                onClick={() => setShowDeleteConfirm(false)}
-                                className="modal-cancel-btn"
-                            >
-                                Отмена
-                            </button>
-                            <button
-                                onClick={handleDeleteUser}
-                                className="modal-confirm-btn"
-                            >
-                                Удалить
-                            </button>
-                        </div>
+                    <div className="form-actions">
+                        <button 
+                            type="button" 
+                            onClick={handleCancel}
+                            className="cancel-btn"
+                            disabled={loadingSave}
+                        >
+                            Отмена
+                        </button>
+                        <button 
+                            type="submit" 
+                            className="submit-btn"
+                            disabled={loadingSave}
+                        >
+                            {loadingSave ? 'Сохранение...' : 'Сохранить изменения'}
+                        </button>
                     </div>
-                </div>
+                </form>
             )}
         </div>
     );
