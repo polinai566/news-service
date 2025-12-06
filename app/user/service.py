@@ -15,7 +15,7 @@ class UserService:
         # проверка уникальности email
         existing_user = await self.db.execute(select(User).where(User.email == payload.email))
         if existing_user.scalar_one_or_none():
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
         payload.password = hash_password(payload.password)
         new_user = User(**payload.model_dump())
         self.db.add(new_user)
@@ -45,8 +45,18 @@ class UserService:
         user = user.scalar_one_or_none()
         if not user:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-        payload.password = hash_password(payload.password) 
-        for field, value in payload.model_dump(exclude_unset=True).items():
+        update_data = payload.model_dump(exclude_unset=True)
+        if 'email' in update_data and update_data['email'] != user.email:
+            existing_user = await self.db.execute(
+                select(User).where(User.email == update_data['email'])
+            )
+            if existing_user.scalar_one_or_none():
+                raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
+        if 'password' in update_data and update_data['password']:
+            update_data['password'] = hash_password(update_data['password'])
+        elif 'password' in update_data:
+            del update_data['password']
+        for field, value in update_data.items():
             setattr(user, field, value)
         await self.db.commit()
         await self.db.refresh(user)
