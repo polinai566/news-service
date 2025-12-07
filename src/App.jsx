@@ -7,6 +7,7 @@ import SignUpPage from './pages/SignUpPage/SignUpPage';
 import CreateNewsPage from './pages/CreateNewsPage/CreateNewsPage';
 import EditNewsPage from './pages/EditNewsPage/EditNewsPage';
 import UserProfilePage from './pages/UserProfilePage/UserProfilePage';
+import AdminUsersPage from './pages/AdminUsersPage/AdminUsersPage';
 import { decodeJWT } from './utils/jwtDecoder';
 import { authAPI } from './api/index';
 import './styles/App.css';
@@ -89,11 +90,18 @@ function App() {
                     <ul>
                         <li><Link to="/">Главная</Link></li>
                         
-                        {/* Кнопка создания новости (только для админов и авторов) */}
                         {isAuthenticated && canCreateNews && (
                             <li>
                                 <Link to="/news/create" className="create-news-link">
                                     ➕ Создать новость
+                                </Link>
+                            </li>
+                        )}
+                        
+                        {isAuthenticated && user?.user_role === 'admin' && (
+                            <li>
+                                <Link to="/admin/users" className="admin-link">
+                                    👑 Админ-панель
                                 </Link>
                             </li>
                         )}
@@ -126,6 +134,7 @@ function App() {
                         <Route path="/signup" element={<SignUpPage />} />
                         <Route path="/profile" element={<UserProfilePage />} />
                         <Route path="/profile/:userId" element={<UserProfilePage />} />
+                        <Route path="/admin/users" element={user?.user_role === 'admin' ? <AdminUsersPage /> : <div>Доступ запрещён</div>} />
                     </Routes>
                 </div>
             </div>

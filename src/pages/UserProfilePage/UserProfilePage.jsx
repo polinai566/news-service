@@ -14,6 +14,7 @@ function UserProfilePage() {
     const [error, setError] = useState('');
     const [isEditing, setIsEditing] = useState(false);
     const [loadingSave, setLoadingSave] = useState(false);
+    const [deletingAccount, setDeletingAccount] = useState(false);
     
     // форма редактирования
     const [formData, setFormData] = useState({
@@ -106,6 +107,7 @@ function UserProfilePage() {
     );
 
     const canChangeRole = currentUser?.user_role === 'admin' && currentUser.user_id !== user?.user_id;
+    const isOwnProfile = currentUser?.user_id === user?.user_id;
 
     const handleEdit = () => {
         setIsEditing(true);
@@ -161,8 +163,6 @@ function UserProfilePage() {
             
             if (formData.password && formData.password.trim() !== '') {
                 updateData.password = formData.password.trim();
-            } else {
-
             }
 
             console.log('Отправка данных для обновления:', { 
@@ -240,6 +240,73 @@ function UserProfilePage() {
         }));
     };
 
+    const handleDeleteAccount = async () => {
+        // двойное подтверждение для удаления аккаунта
+        const confirmation1 = window.confirm(
+            '⚠️ ВНИМАНИЕ: Вы собираетесь удалить свой аккаунт!\n\n' +
+            'Это действие НЕОБРАТИМО. После удаления:\n' +
+            '• Ваш профиль будет удален\n' +
+            '• Все ваши данные будут удалены\n' +
+            '• Вы не сможете восстановить аккаунт\n\n' +
+            'Вы уверены, что хотите продолжить?'
+        );
+        
+        if (!confirmation1) return;
+        
+        const confirmation2 = window.confirm(
+            'Пожалуйста, подтвердите еще раз.\n\n' +
+            'Для подтверждения введите "УДАЛИТЬ" в поле ниже:'
+        );
+        
+        if (!confirmation2) return;
+        
+        const userInput = window.prompt(
+            'Введите слово "УДАЛИТЬ" для подтверждения удаления аккаунта:'
+        );
+        
+        if (userInput !== 'УДАЛИТЬ') {
+            alert('Удаление отменено. Слово подтверждения введено неверно.');
+            return;
+        }
+
+        try {
+            setDeletingAccount(true);
+            await userAPI.deleteUser(user.user_id);
+            
+            // если удаляем свой аккаунт
+            if (isOwnProfile) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('refreshToken');
+                localStorage.removeItem('session');
+                localStorage.removeItem('user');
+                localStorage.removeItem('userId');
+                
+                alert('Ваш аккаунт был успешно удален. Спасибо, что были с нами!');
+                navigate('/');
+            } else {
+                alert('Аккаунт пользователя успешно удален');
+                navigate('/admin/users');
+            }
+        } catch (err) {
+            console.error('Ошибка при удалении аккаунта:', err);
+            
+            if (err.response?.status === 401) {
+                setError('Сессия истекла. Пожалуйста, войдите снова.');
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                setTimeout(() => navigate('/login'), 2000);
+            } else if (err.response?.status === 403) {
+                setError('У вас нет прав для удаления этого аккаунта');
+            } else if (err.response?.status === 404) {
+                setError('Пользователь не найден');
+            } else {
+                setError('Не удалось удалить аккаунт. Попробуйте еще раз.');
+            }
+        } finally {
+            setDeletingAccount(false);
+        }
+    };
+
     if (loading) {
         return (
             <div className="profile-container">
@@ -266,8 +333,6 @@ function UserProfilePage() {
         );
     }
 
-    const isOwnProfile = currentUser?.user_id === user.user_id;
-
     return (
         <div className="profile-container">
             <Link to="/" className="back-link">← Вернуться на главную</Link>
@@ -275,9 +340,11 @@ function UserProfilePage() {
             <div className="profile-header">
                 <h1>Профиль пользователя</h1>
                 {canEdit && !isEditing && (
-                    <button onClick={handleEdit} className="edit-btn">
-                        ✏️ Редактировать
-                    </button>
+                    <div className="profile-header-actions">
+                        <button onClick={handleEdit} className="edit-btn">
+                            ✏️ Редактировать
+                        </button>
+                    </div>
                 )}
             </div>
 
@@ -324,6 +391,21 @@ function UserProfilePage() {
                             </span>
                         </div>
                     </div>
+                    
+                    {isOwnProfile && !isEditing && (
+                        <div className="delete-account-section">
+                            <p className="delete-warning">
+                                Удаление аккаунта — необратимое действие. После удаления восстановление невозможно.
+                            </p>
+                            <button 
+                                onClick={handleDeleteAccount} 
+                                className="delete-account-btn"
+                                disabled={deletingAccount}
+                            >
+                                {deletingAccount ? 'Удаление...' : '🗑️ Удалить мой аккаунт'}
+                            </button>
+                        </div>
+                    )}
                 </div>
             ) : (
                 <form onSubmit={handleSubmit} className="profile-form">

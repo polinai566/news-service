@@ -31,6 +31,12 @@
     font-size: 2em;
 }
 
+.profile-header-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
 .edit-btn {
     padding: 0.5rem 1rem;
     background-color: #646cff;
@@ -74,6 +80,7 @@
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
+    margin-bottom: 2rem;
 }
 
 .info-item {
@@ -209,6 +216,62 @@
     cursor: not-allowed;
 }
 
+.delete-account-section {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 2px solid rgba(255, 107, 107, 0.3);
+}
+
+.warning-message {
+    color: #ff6b6b;
+    font-weight: bold;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.delete-warning {
+    color: #ff9e9e;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.delete-account-btn {
+    width: 100%;
+    padding: 1rem;
+    background-color: rgba(255, 107, 107, 0.1);
+    color: #ff6b6b;
+    border: 2px solid #ff6b6b;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.delete-account-btn:hover:not(:disabled) {
+    background-color: rgba(255, 107, 107, 0.2);
+    color: #ff5252;
+    border-color: #ff5252;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.2);
+}
+
+.delete-account-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.delete-account-btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
 @media (max-width: 768px) {
     .profile-container {
         padding: 1rem;
@@ -218,6 +281,11 @@
         flex-direction: column;
         align-items: flex-start;
         gap: 1rem;
+    }
+
+    .profile-header-actions {
+        width: 100%;
+        justify-content: flex-start;
     }
 
     .info-item {
@@ -231,6 +299,11 @@
     .cancel-btn,
     .submit-btn {
         width: 100%;
+    }
+
+    .delete-account-btn {
+        padding: 0.8rem;
+        font-size: 0.95rem;
     }
 }
 
