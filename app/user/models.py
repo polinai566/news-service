@@ -14,5 +14,5 @@ class User(Base):
     user_role = Column(String, default="user")
     password = Column(String, nullable=True)
 
-    news = relationship("News", back_populates="author")
-    comment = relationship("Comment", back_populates="author")
+    news = relationship("News", back_populates="author", cascade="all, delete-orphan")
+    comment = relationship("Comment", back_populates="author", cascade="all, delete-orphan")
