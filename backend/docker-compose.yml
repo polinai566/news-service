@@ -1,9 +1,0 @@
-services:
-  postgres:
-    image: postgres:17.5
-    environment:
-      POSTGRES_DB: "news_service"
-      POSTGRES_USER: "postgres"
-      POSTGRES_PASSWORD: "password"
-    ports:
-      - "5433:5432"

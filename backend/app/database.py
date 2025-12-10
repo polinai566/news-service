@@ -1,14 +1,25 @@
-﻿from sqlalchemy.orm import declarative_base
-from sqlalchemy.ext.asyncio import (
-    create_async_engine,
-    async_sessionmaker,
-    AsyncSession,
-)
+﻿import os
 from typing import Annotated, AsyncGenerator
+
+from dotenv import load_dotenv
 from fastapi import Depends
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
+from sqlalchemy.orm import declarative_base
+
+load_dotenv()
+USER = os.environ["POSTGRES_USER"]
+PASSWORD = os.environ["POSTGRES_PASSWORD"]
+HOST = os.environ["POSTGRES_HOST"]
+DB = os.environ["POSTGRES_DB"]
+PORT = os.environ["POSTGRES_PORT"]
+
 
 DATABASE_URL = (
-    "postgresql+asyncpg://postgres:password@localhost:5432/news_service"
+    f"postgresql+asyncpg://{USER}:{PASSWORD}@{HOST}:{PORT}/{DB}"
 )
 
 engine = create_async_engine(DATABASE_URL)
