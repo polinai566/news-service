@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 from sqlalchemy.orm import declarative_base
+from redis.asyncio import Redis as AsyncRedis
 
 load_dotenv()
 USER = os.environ["POSTGRES_USER"]
@@ -16,6 +17,8 @@ PASSWORD = os.environ["POSTGRES_PASSWORD"]
 HOST = os.environ["POSTGRES_HOST"]
 DB = os.environ["POSTGRES_DB"]
 PORT = os.environ["POSTGRES_PORT"]
+REDIS_HOST = os.environ["REDIS_HOST"]
+REDIS_PORT = int(os.environ["REDIS_PORT"])
 
 
 DATABASE_URL = (
@@ -39,3 +42,5 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
 
 
 SessionDep = Annotated[AsyncSession, Depends(get_db_session)]
+
+redis_client = AsyncRedis(host=REDIS_HOST, port=REDIS_PORT, db=0, decode_responses=True)

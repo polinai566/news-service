@@ -5,8 +5,9 @@ from typing import Optional
 class UserBase(BaseModel):
     user_name: str
     email: EmailStr
-    is_verified: bool = False
+    user_role: str = "user"
     avatar: Optional[str] = None
+    password: Optional[str] = None
 
 class UserCreate(UserBase):
     pass
@@ -18,3 +19,7 @@ class UserRead(UserBase):
     user_id: int
     registration_date: datetime
     model_config = ConfigDict(from_attributes=True)
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
