@@ -1,6 +1,6 @@
 ﻿from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, JSON
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
 from ..database import Base
 
 class News(Base):
@@ -9,7 +9,7 @@ class News(Base):
     news_id = Column(Integer, primary_key=True, index=True)
     header = Column(String, index=True, nullable=False)
     content = Column(JSON, nullable=False)
-    publication_date = Column(DateTime, default=datetime.now)
+    publication_date = Column(DateTime(timezone=True), default=datetime.now(timezone.utc))
     author_id = Column(Integer, ForeignKey("user.user_id"), nullable=False)
     cover = Column(String, nullable=True)
 

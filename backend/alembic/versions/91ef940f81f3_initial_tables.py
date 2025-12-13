@@ -25,9 +25,10 @@ def upgrade() -> None:
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('user_name', sa.String(), nullable=False),
     sa.Column('email', sa.String(), nullable=False),
-    sa.Column('registration_date', sa.DateTime(), nullable=True),
-    sa.Column('is_verified', sa.Boolean(), nullable=True),
+    sa.Column('registration_date', sa.DateTime(timezone=True), nullable=True),
     sa.Column('avatar', sa.String(), nullable=True),
+    sa.Column('user_role', sa.String(), nullable=True),
+    sa.Column('password', sa.String(), nullable=True),
     sa.PrimaryKeyConstraint('user_id')
     )
     op.create_index(op.f('ix_user_email'), 'user', ['email'], unique=True)
@@ -37,7 +38,7 @@ def upgrade() -> None:
     sa.Column('news_id', sa.Integer(), nullable=False),
     sa.Column('header', sa.String(), nullable=False),
     sa.Column('content', sa.JSON(), nullable=False),
-    sa.Column('publication_date', sa.DateTime(), nullable=True),
+    sa.Column('publication_date', sa.DateTime(timezone=True), nullable=True),
     sa.Column('author_id', sa.Integer(), nullable=False),
     sa.Column('cover', sa.String(), nullable=True),
     sa.ForeignKeyConstraint(['author_id'], ['user.user_id'], ),
@@ -50,7 +51,7 @@ def upgrade() -> None:
     sa.Column('text', sa.String(), nullable=False),
     sa.Column('news_id', sa.Integer(), nullable=False),
     sa.Column('author_id', sa.Integer(), nullable=False),
-    sa.Column('publication_date', sa.DateTime(), nullable=True),
+    sa.Column('publication_date', sa.DateTime(timezone=True), nullable=True),
     sa.ForeignKeyConstraint(['author_id'], ['user.user_id'], ),
     sa.ForeignKeyConstraint(['news_id'], ['news.news_id'], ),
     sa.PrimaryKeyConstraint('comment_id')
