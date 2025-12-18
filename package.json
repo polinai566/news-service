@@ -1,0 +1,10 @@
+{
+  "name": "LAB_PASZI",
+  "version": "1.0.0",
+  "description": "",
+  "main": "frontend/src/api/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "private": true
+}
