@@ -1,0 +1,131 @@
+.admin-users-container {
+    max-width: 980px;
+    margin: 2rem auto;
+    padding: 2rem 2.5rem;
+    background: #232325;
+    border-radius: 16px;
+    color: #f6f6fb;
+    box-shadow: 0 2px 16px -3px rgba(33,33,48,0.19), 0 2px 4px rgba(33,33,48,0.08);
+}
+
+.admin-users-title {
+    margin-bottom: 1.5rem;
+    color: #fff;
+    font-weight: bold;
+}
+
+.admin-users-stats {
+    margin-bottom: 24px;
+}
+.admin-users-stats ul {
+    margin: 10px 0 24px 18px;
+    color: #f8def4;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: transparent;
+    color: #f6f6fb;
+    font-size: 1.02rem;
+}
+
+.admin-table thead tr {
+    background: #28283f;
+}
+.admin-table th, .admin-table td {
+    padding: 12px 8px;
+    text-align: left;
+    border-bottom: 1px solid #373744;
+    vertical-align: middle;
+}
+.admin-table tr:nth-child(even) {
+    background: #242532;
+}
+.admin-table tr:nth-child(odd) {
+    background: #1d1d22;
+}
+.admin-table th {
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.admin-user-role {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.admin-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.admin-profile-btn {
+    display: inline-block;
+    padding: 6px 12px;
+    background-color: rgba(100, 108, 255, 0.2);
+    color: #646cff;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    border: 1px solid rgba(100, 108, 255, 0.3);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.admin-profile-btn:hover {
+    background-color: rgba(100, 108, 255, 0.3);
+    color: #535bf2;
+    text-decoration: none;
+}
+
+.admin-delete-btn {
+    background: #232325;
+    color: #ff4757;
+    border: 1px solid #ff4757;
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.18s;
+}
+.admin-delete-btn:hover {
+    background: #ff3838;
+    color: white;
+    border: 1px solid #ff3838;
+}
+
+.admin-loading {
+    text-align: center;
+    padding: 2rem;
+    color: #aaa;
+}
+
+.admin-error {
+    text-align: center;
+    padding: 2rem;
+    color: #ff4757;
+}
+
+@media (max-width: 650px) {
+    .admin-users-container {
+        padding: 1rem;
+    }
+    .admin-table th, .admin-table td {
+        font-size: .87rem;
+        padding: 6px 4px;
+    }
+    .admin-actions {
+        flex-direction: column;
+        gap: 4px;
+    }
+    .admin-profile-btn,
+    .admin-delete-btn {
+        width: 100%;
+        text-align: center;
+    }
+}
