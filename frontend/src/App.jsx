@@ -4,6 +4,7 @@ import SignUpPage from './pages/SignUpPage/SignUpPage';
 import { decodeJWT } from './utils/jwtDecoder';
 import { authAPI } from './api/index';
 import './styles/App.css';
+import RegistrationSuccessPage from "./pages/RegistrationSuccessPage/RegistrationSuccessPage.jsx";
 
 function App() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -96,6 +97,7 @@ function App() {
 
                     {/* Страница регистрации */}
                     <Route path="/register" element={<SignUpPage />} />
+                    <Route path="/userpage" element={<RegistrationSuccessPage />} />
                 </Routes>
             </div>
         </Router>

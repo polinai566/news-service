@@ -5,7 +5,6 @@ import './SignUpPage.css';
 
 function SignUpPage() {
     const [userName, setUserName] = useState('');
-    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
@@ -19,11 +18,6 @@ function SignUpPage() {
         // валидация
         if (!userName.trim()) {
             setError('Имя пользователя обязательно');
-            return;
-        }
-
-        if (!email.trim()) {
-            setError('Email обязателен');
             return;
         }
 
@@ -46,7 +40,6 @@ function SignUpPage() {
             setLoading(true);
             const response = await userAPI.register({
                 user_name: userName,
-                email: email.trim(),
                 password: password,
                 user_role: "user",
                 avatar: null
@@ -54,7 +47,7 @@ function SignUpPage() {
             if (response.data) {
                 // успешная регистрация - перенаправляем на логин
                 alert('Регистрация прошла успешно! Теперь вы можете войти.');
-                navigate('/login');
+                navigate('/userpage');
             }
         } catch (err) {
             console.error('Ошибка регистрации:', err);
@@ -65,7 +58,7 @@ function SignUpPage() {
                     setError('Некорректные данные');
                 }
             } else if (err.response?.status === 409) {
-                setError('Пользователь с таким email уже существует');
+                setError('Пользователь с таким login уже существует');
             } else if (err.message === 'Network Error') {
                 setError('Ошибка сети. Проверьте подключение к серверу');
             } else {
@@ -92,17 +85,6 @@ function SignUpPage() {
                     />
                 </div>
 
-                <div className="form-group">
-                    <label htmlFor="email">Email:</label>
-                    <input
-                        id="email"
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                        placeholder="Введите ваш email"
-                    />
-                </div>
 
                 <div className="form-group">
                     <label htmlFor="password">Пароль:</label>
