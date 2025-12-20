@@ -19,11 +19,11 @@ DATABASE_URL = f"postgresql://{USER}:{PASSWORD}@{HOST}:{PORT}/{DB}"
 
 BASE_URL = f"http://{HOST}:8000"
 
-# Список email'ов, используемых в тестах
-TEST_EMAILS = [
-    "test_user_1@example.com",
-    "duplicate_test@example.com",
-    "weak@example.com",
+# Список login'ов, используемых в тестах
+TEST_LOGINS = [
+    "test_user_1",
+    "duplicate_test",
+    "weak",
 ]
 
 
@@ -31,8 +31,8 @@ TEST_EMAILS = [
 def _clean_test_users():
     conn = psycopg2.connect(DATABASE_URL)
     cur = conn.cursor()
-    for email in TEST_EMAILS:
-        cur.execute('DELETE FROM "user" WHERE email = %s', (email,))
+    for login in TEST_LOGINS:
+        cur.execute('DELETE FROM "user" WHERE login = %s', (login,))
     conn.commit()
     cur.close()
     conn.close()
@@ -55,7 +55,7 @@ def client():
 def test_successful_registration(client):
     user_data = {
         "user_name": "test_user_1",
-        "email": "test_user_1@example.com",
+        "login": "test_user_1",
         "is_verified": False,
         "avatar": "default_avatar.png",
         "password": "StrongPassword123!",
@@ -65,7 +65,7 @@ def test_successful_registration(client):
     assert response.status_code == 200
 
     data = response.json()
-    assert data["email"] == user_data["email"]
+    assert data["login"] == user_data["login"]
     assert "user_name" in data
     assert "avatar" in data
     assert "registration_date" in data
@@ -73,17 +73,17 @@ def test_successful_registration(client):
 
 # Тест 2: Дублирующий логин
 def test_duplicate_email_registration(client):
-    email = "duplicate_test@example.com"
+    login = "duplicate_test"
     user1 = {
         "user_name": "user1",
-        "email": email,
+        "login": login,
         "is_verified": False,
         "avatar": "a1.png",
         "password": "Pass123!",
     }
     user2 = {
         "user_name": "user2",
-        "email": email,
+        "login": login,
         "is_verified": False,
         "avatar": "a2.png",
         "password": "Pass456!",
@@ -100,7 +100,7 @@ def test_duplicate_email_registration(client):
 def test_weak_password_registration(client):
     user_data = {
         "user_name": "weak_user",
-        "email": "weak@example.com",
+        "login": "weak",
         "is_verified": False,
         "avatar": "weak.png",
         "password": "123",
