@@ -74,8 +74,6 @@ function App() {
         return <div className="loading">Проверка авторизации...</div>;
     }
 
-    // проверка пользователя на создание новости
-    const canCreateNews = user?.user_role && ['admin', 'author'].includes(user.user_role);
 
     return (
         <Router>
