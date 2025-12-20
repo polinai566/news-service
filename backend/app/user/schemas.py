@@ -2,12 +2,12 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
+from pydantic import BaseModel, ConfigDict, field_validator
 
 
 class UserBase(BaseModel):
     user_name: str
-    email: EmailStr
+    login: str
     user_role: str = "user"
     avatar: Optional[str] = None
     password: Optional[str] = None
@@ -51,5 +51,5 @@ class UserRead(UserBase):
 
 
 class UserLogin(BaseModel):
-    email: EmailStr
+    login: str
     password: str

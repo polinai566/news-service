@@ -131,8 +131,8 @@ export const newsAPI = {
 
 export const authAPI = {
     // авторизация
-    login: (email, password) => api.post('/session/', {
-        email,
+    login: (login, password) => api.post('/session/', {
+        login,
         password,
     }),
     // обновление токена

@@ -72,7 +72,7 @@ def test_successful_registration(client):
 
 
 # Тест 2: Дублирующий логин
-def test_duplicate_email_registration(client):
+def test_duplicate_login_registration(client):
     login = "duplicate_test"
     user1 = {
         "user_name": "user1",
