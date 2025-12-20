@@ -1,10 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import SignUpPage from './pages/SignUpPage/SignUpPage';
+import HomePage from '../src/pages/HomePage/HomePage';
+import NewsPage from '../src/pages/NewsPage/NewsPage';
+import LoginPage from '../src/pages/LoginPage/LoginPage';
+import SignUpPage from '../src/pages/SignUpPage/SignUpPage';
+import CreateNewsPage from '../src/pages/CreateNewsPage/CreateNewsPage';
+import EditNewsPage from '../src/pages/EditNewsPage/EditNewsPage';
+import UserProfilePage from '../src/pages/UserProfilePage/UserProfilePage';
+import AdminUsersPage from '../src/pages/AdminUsersPage/AdminUsersPage';
 import { decodeJWT } from './utils/jwtDecoder';
 import { authAPI } from './api/index';
-import './styles/App.css';
-import RegistrationSuccessPage from "./pages/RegistrationSuccessPage/RegistrationSuccessPage.jsx";
+import '../src/styles/App.css';
 
 function App() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -74,29 +80,63 @@ function App() {
         return <div className="loading">Проверка авторизации...</div>;
     }
 
+    // проверка пользователя на создание новости
+    const canCreateNews = user?.user_role && ['admin', 'author'].includes(user.user_role);
 
     return (
         <Router>
             <div className="app">
-                <Routes>
-                    {/* Главная страница */}
-                    <Route
-                        path="/"
-                        element={
-                            <div className="home-page">
-                                <h1>Добро пожаловать</h1>
+                <nav>
+                    <ul>
+                        <li><Link to="/">Главная</Link></li>
 
-                                <Link to="/signup" className="signup-main-btn">
-                                    Зарегистрироваться
+                        {isAuthenticated && canCreateNews && (
+                            <li>
+                                <Link to="/news/create" className="create-news-link">
+                                    ➕ Создать новость
                                 </Link>
-                            </div>
-                        }
-                    />
+                            </li>
+                        )}
 
-                    {/* Страница регистрации */}
-                    <Route path="/signup" element={<SignUpPage />} />
-                    <Route path="/userpage" element={<RegistrationSuccessPage />} />
-                </Routes>
+                        {isAuthenticated && user?.user_role === 'admin' && (
+                            <li>
+                                <Link to="/admin/users" className="admin-link">
+                                    👑 Админ-панель
+                                </Link>
+                            </li>
+                        )}
+
+                        {isAuthenticated ? (
+                            <>
+                                <li>
+                                    <Link to="/profile">Профиль</Link>
+                                </li>
+                                <li className="user-info">
+                                    <button onClick={handleLogout} className="logout-btn">Выйти</button>
+                                </li>
+                            </>
+                        ) : (
+                            <>
+                                <li><Link to="/login">Войти</Link></li>
+                                <li><Link to="/signup">Регистрация</Link></li>
+                            </>
+                        )}
+                    </ul>
+                </nav>
+
+                <div className="content">
+                    <Routes>
+                        <Route path="/" element={<HomePage />} />
+                        <Route path="/news/:id" element={<NewsPage />} />
+                        <Route path="/news/create" element={<CreateNewsPage />} />
+                        <Route path="/news/:id/edit" element={<EditNewsPage />} />
+                        <Route path="/login" element={<LoginPage setIsAuthenticated={setIsAuthenticated} setUser={setUser} />} />
+                        <Route path="/signup" element={<SignUpPage />} />
+                        <Route path="/profile" element={<UserProfilePage />} />
+                        <Route path="/profile/:userId" element={<UserProfilePage />} />
+                        <Route path="/admin/users" element={user?.user_role === 'admin' ? <AdminUsersPage /> : <div>Доступ запрещён</div>} />
+                    </Routes>
+                </div>
             </div>
         </Router>
     );

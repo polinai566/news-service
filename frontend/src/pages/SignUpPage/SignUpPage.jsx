@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { userAPI } from '../../api/index';
+import { userAPI } from '../../api/index.js';
 import './SignUpPage.css';
 
 function SignUpPage() {
     const [userName, setUserName] = useState('');
+    const [login, setLogin] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
@@ -14,10 +15,15 @@ function SignUpPage() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
-
+      
         // валидация
         if (!userName.trim()) {
             setError('Имя пользователя обязательно');
+            return;
+        }
+
+        if (!login.trim()) {
+            setError('Login обязателен');
             return;
         }
 
@@ -40,6 +46,7 @@ function SignUpPage() {
             setLoading(true);
             const response = await userAPI.register({
                 user_name: userName,
+                login: login.trim(),
                 password: password,
                 user_role: "user",
                 avatar: null
@@ -47,12 +54,12 @@ function SignUpPage() {
             if (response.data) {
                 // успешная регистрация - перенаправляем на логин
                 alert('Регистрация прошла успешно! Теперь вы можете войти.');
-                navigate('/');
+                navigate('/login');
             }
         } catch (err) {
             console.error('Ошибка регистрации:', err);
             if (err.response?.status === 400) {
-                if (err.response.data.detail) {
+                if (err.response.data?.detail) {
                     setError(err.response.data.detail);
                 } else {
                     setError('Некорректные данные');
@@ -85,6 +92,17 @@ function SignUpPage() {
                     />
                 </div>
 
+                <div className="form-group">
+                    <label htmlFor="login">Login:</label>
+                    <input
+                        id="login"
+                        type="login"
+                        value={login}
+                        onChange={(e) => SetLogin(e.target.value)}
+                        required
+                        placeholder="Введите ваш login"
+                    />
+                </div>
 
                 <div className="form-group">
                     <label htmlFor="password">Пароль:</label>
@@ -112,13 +130,17 @@ function SignUpPage() {
 
                 {error && <div className="error-message">{error}</div>}
 
-                <button
-                    type="submit"
+                <button 
+                    type="submit" 
                     className="submit-btn"
                     disabled={loading}
                 >
                     {loading ? 'Регистрация...' : 'Зарегистрироваться'}
                 </button>
+
+                <div className="login-link">
+                    Уже есть аккаунт? <a href="/login">Войти</a>
+                </div>
             </form>
         </div>
     );
