@@ -1,13 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import HomePage from './pages/HomePage/HomePage';
-import NewsPage from './pages/NewsPage/NewsPage';
-import LoginPage from './pages/LoginPage/LoginPage';
 import SignUpPage from './pages/SignUpPage/SignUpPage';
-import CreateNewsPage from './pages/CreateNewsPage/CreateNewsPage';
-import EditNewsPage from './pages/EditNewsPage/EditNewsPage';
-import UserProfilePage from './pages/UserProfilePage/UserProfilePage';
-import AdminUsersPage from './pages/AdminUsersPage/AdminUsersPage';
 import { decodeJWT } from './utils/jwtDecoder';
 import { authAPI } from './api/index';
 import './styles/App.css';
@@ -86,57 +79,24 @@ function App() {
     return (
         <Router>
             <div className="app">
-                <nav>
-                    <ul>
-                        <li><Link to="/">Главная</Link></li>
+                <Routes>
+                    {/* Главная страница */}
+                    <Route
+                        path="/"
+                        element={
+                            <div className="home-page">
+                                <h1>Добро пожаловать</h1>
 
-                        {isAuthenticated && canCreateNews && (
-                            <li>
-                                <Link to="/news/create" className="create-news-link">
-                                    ➕ Создать новость
+                                <Link to="/register" className="signup-main-btn">
+                                    Зарегистрироваться
                                 </Link>
-                            </li>
-                        )}
+                            </div>
+                        }
+                    />
 
-                        {isAuthenticated && user?.user_role === 'admin' && (
-                            <li>
-                                <Link to="/admin/users" className="admin-link">
-                                    👑 Админ-панель
-                                </Link>
-                            </li>
-                        )}
-
-                        {isAuthenticated ? (
-                            <>
-                                <li>
-                                    <Link to="/profile">Профиль</Link>
-                                </li>
-                                <li className="user-info">
-                                    <button onClick={handleLogout} className="logout-btn">Выйти</button>
-                                </li>
-                            </>
-                        ) : (
-                            <>
-                                <li><Link to="/login">Войти</Link></li>
-                                <li><Link to="/signup">Регистрация</Link></li>
-                            </>
-                        )}
-                    </ul>
-                </nav>
-
-                <div className="content">
-                    <Routes>
-                        <Route path="/" element={<HomePage />} />
-                        <Route path="/news/:id" element={<NewsPage />} />
-                        <Route path="/news/create" element={<CreateNewsPage />} />
-                        <Route path="/news/:id/edit" element={<EditNewsPage />} />
-                        <Route path="/login" element={<LoginPage setIsAuthenticated={setIsAuthenticated} setUser={setUser} />} />
-                        <Route path="/signup" element={<SignUpPage />} />
-                        <Route path="/profile" element={<UserProfilePage />} />
-                        <Route path="/profile/:userId" element={<UserProfilePage />} />
-                        <Route path="/admin/users" element={user?.user_role === 'admin' ? <AdminUsersPage /> : <div>Доступ запрещён</div>} />
-                    </Routes>
-                </div>
+                    {/* Страница регистрации */}
+                    <Route path="/register" element={<SignUpPage />} />
+                </Routes>
             </div>
         </Router>
     );

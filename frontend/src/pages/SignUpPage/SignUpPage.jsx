@@ -137,10 +137,6 @@ function SignUpPage() {
                 >
                     {loading ? 'Регистрация...' : 'Зарегистрироваться'}
                 </button>
-
-                <div className="login-link">
-                    Уже есть аккаунт? <a href="/login">Войти</a>
-                </div>
             </form>
         </div>
     );
