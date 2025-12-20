@@ -31,7 +31,7 @@ function NewsCard({ news, showCover = true, showPreview = true, goAhead = true }
             {showCover && news.cover && (
                 <div className="cover-container">
                     <img
-                        src={`http://localhost:8000/static/${news.cover}`}
+                        src={`http://backend:8000/static/${news.cover}`}
                         alt={news.header}
                         className="news-cover"
                         onError={(e) => {

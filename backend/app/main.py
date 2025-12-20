@@ -12,18 +12,19 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # адрес фронтенда
+    # allow_origins=["http://localhost:5173"],  # адрес фронтенда
+    allow_origins=["http://frontend:5173"],  # адрес фронтенда
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["x-jwt"]
+    expose_headers=["x-jwt"],
 )
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 os.makedirs(STATIC_DIR, exist_ok=True)
 # папка с обложками для новостей
-app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static") 
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 app.include_router(user_router, prefix="/user")
 app.include_router(news_router, prefix="/news")

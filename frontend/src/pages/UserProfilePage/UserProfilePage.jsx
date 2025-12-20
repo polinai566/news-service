@@ -354,7 +354,7 @@ function UserProfilePage() {
                 <div className="profile-info">
                     <div className="avatar-container">
                         <Avatar
-                            src={user.avatar ? (user.avatar.startsWith('http') ? user.avatar : `http://localhost:8000/static/${user.avatar}`) : null}
+                            src={user.avatar ? (user.avatar.startsWith('http') ? user.avatar : `http://backend:8000/static/${user.avatar}`) : null}
                             alt={user.user_name}
                             size="xlarge"
                         />
@@ -486,7 +486,7 @@ function UserProfilePage() {
                         {formData.avatar && (
                             <div className="avatar-preview">
                                 <Avatar
-                                    src={formData.avatar ? (formData.avatar.startsWith('http') ? formData.avatar : `http://localhost:8000/static/${formData.avatar}`) : null}
+                                    src={formData.avatar ? (formData.avatar.startsWith('http') ? formData.avatar : `http://backend:8000/static/${formData.avatar}`) : null}
                                     alt={formData.user_name}
                                     size="large"
                                 />

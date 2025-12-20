@@ -10,8 +10,16 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.orm import declarative_base
 from redis.asyncio import Redis as AsyncRedis
+import os
 
 load_dotenv()
+# USER = os.getenv["POSTGRES_USER"]
+# PASSWORD = os.getenv["POSTGRES_PASSWORD"]
+# HOST = os.getenv["POSTGRES_HOST"]
+# DB = os.getenv["POSTGRES_DB"]
+# PORT = os.getenv["POSTGRES_PORT"]
+# REDIS_HOST = os.getenv["REDIS_HOST"]
+# REDIS_PORT = int(os.getenv["REDIS_PORT"])
 USER = os.environ["POSTGRES_USER"]
 PASSWORD = os.environ["POSTGRES_PASSWORD"]
 HOST = os.environ["POSTGRES_HOST"]
@@ -44,4 +52,6 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
 
 SessionDep = Annotated[AsyncSession, Depends(get_db_session)]
 
-redis_client = AsyncRedis(host=REDIS_HOST, port=REDIS_PORT, db=0, decode_responses=True)
+redis_client = AsyncRedis(
+    host=REDIS_HOST, port=REDIS_PORT, db=0, decode_responses=True
+)

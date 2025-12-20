@@ -43,7 +43,7 @@ function CommentCard({comment, currentUser, onDelete, onEdit}) {
     const getAvatarUrl = (avatar) => {
         if (!avatar) return null;
         if (avatar.startsWith('http')) return avatar;
-        return `http://localhost:8000/static/${avatar}`;
+        return `http://backend:8000/static/${avatar}`;
     };
 
     return (
