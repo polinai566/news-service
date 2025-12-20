@@ -86,7 +86,7 @@ function App() {
                             <div className="home-page">
                                 <h1>Добро пожаловать</h1>
 
-                                <Link to="/register" className="signup-main-btn">
+                                <Link to="/signup" className="signup-main-btn">
                                     Зарегистрироваться
                                 </Link>
                             </div>
@@ -94,7 +94,7 @@ function App() {
                     />
 
                     {/* Страница регистрации */}
-                    <Route path="/register" element={<SignUpPage />} />
+                    <Route path="/signup" element={<SignUpPage />} />
                     <Route path="/userpage" element={<RegistrationSuccessPage />} />
                 </Routes>
             </div>

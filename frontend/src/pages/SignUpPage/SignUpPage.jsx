@@ -47,12 +47,12 @@ function SignUpPage() {
             if (response.data) {
                 // успешная регистрация - перенаправляем на логин
                 alert('Регистрация прошла успешно! Теперь вы можете войти.');
-                navigate('/userpage');
+                navigate('/');
             }
         } catch (err) {
             console.error('Ошибка регистрации:', err);
             if (err.response?.status === 400) {
-                if (err.response.data?.detail) {
+                if (err.response.data.detail) {
                     setError(err.response.data.detail);
                 } else {
                     setError('Некорректные данные');
