@@ -24,14 +24,14 @@ def upgrade() -> None:
     op.create_table('user',
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('user_name', sa.String(), nullable=False),
-    sa.Column('email', sa.String(), nullable=False),
+    sa.Column('login', sa.String(), nullable=False),
     sa.Column('registration_date', sa.DateTime(timezone=True), nullable=True),
     sa.Column('avatar', sa.String(), nullable=True),
     sa.Column('user_role', sa.String(), nullable=True),
     sa.Column('password', sa.String(), nullable=True),
     sa.PrimaryKeyConstraint('user_id')
     )
-    op.create_index(op.f('ix_user_email'), 'user', ['email'], unique=True)
+    op.create_index(op.f('ix_user_login'), 'user', ['login'], unique=True)
     op.create_index(op.f('ix_user_user_id'), 'user', ['user_id'], unique=False)
     op.create_index(op.f('ix_user_user_name'), 'user', ['user_name'], unique=False)
     op.create_table('news',
@@ -70,6 +70,6 @@ def downgrade() -> None:
     op.drop_table('news')
     op.drop_index(op.f('ix_user_user_name'), table_name='user')
     op.drop_index(op.f('ix_user_user_id'), table_name='user')
-    op.drop_index(op.f('ix_user_email'), table_name='user')
+    op.drop_index(op.f('ix_user_login'), table_name='user')
     op.drop_table('user')
     # ### end Alembic commands ###

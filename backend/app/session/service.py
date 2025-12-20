@@ -24,11 +24,11 @@ class SessionService:
     async def create(self, payload: UserLogin, response: Response, request: Request) -> SessionCreate | str:
 
         # получение пользователя из базы данных
-        result = await self.db.execute(select(User).where(User.email == payload.email))
+        result = await self.db.execute(select(User).where(User.login == payload.login))
         user = result.scalar_one_or_none()
-        # проверка существования логина (email)
+        # проверка существования логина (login)
         if user == None:
-            return "This email is not registered"
+            return "This login is not registered"
         # проверка пароля
         if not check_password(payload.password, user.password): 
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect password")

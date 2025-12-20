@@ -13,10 +13,10 @@ class UserService:
 
     # создание пользователя
     async def create(self, payload: UserCreate) -> User | str:
-        # проверка уникальности email
-        existing_user = await self.db.execute(select(User).where(User.email == payload.email))
+        # проверка уникальности login
+        existing_user = await self.db.execute(select(User).where(User.login == payload.login))
         if existing_user.scalar_one_or_none():
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Login already registered")
         payload.password = hash_password(payload.password)
         new_user = User(**payload.model_dump())
         self.db.add(new_user)
@@ -47,12 +47,12 @@ class UserService:
         if not user:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
         update_data = payload.model_dump(exclude_unset=True)
-        if 'email' in update_data and update_data['email'] != user.email:
+        if 'login' in update_data and update_data['login'] != user.login:
             existing_user = await self.db.execute(
-                select(User).where(User.email == update_data['email'])
+                select(User).where(User.login == update_data['login'])
             )
             if existing_user.scalar_one_or_none():
-                raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
+                raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Login already registered")
         if 'password' in update_data and update_data['password']:
             update_data['password'] = hash_password(update_data['password'])
         elif 'password' in update_data:

@@ -8,7 +8,7 @@ class User(Base):
 
     user_id = Column(Integer, primary_key=True, index=True)
     user_name = Column(String, index=True, nullable=False)
-    email = Column(String, unique=True, index=True, nullable=False)
+    login = Column(String, unique=True, index=True, nullable=False)
     registration_date = Column(DateTime(timezone=True), default=datetime.now(timezone.utc))
     avatar = Column(String, nullable=True)
     user_role = Column(String, default="user")
