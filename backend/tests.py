@@ -17,7 +17,7 @@ REDIS_PORT = int(os.environ["REDIS_PORT"])
 
 DATABASE_URL = f"postgresql://{USER}:{PASSWORD}@{HOST}:{PORT}/{DB}"
 
-BASE_URL = f"http://{HOST}:8000"
+BASE_URL = "http://localhost:8000"
 
 # Список login'ов, используемых в тестах
 TEST_LOGINS = [
