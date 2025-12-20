@@ -19,37 +19,20 @@ TTL (время жизни) сессий равно времени жизни с
 
     POSTGRES_USER="postgres" \
     POSTGRES_PASSWORD="123" \
-    POSTGRES_HOST="localhost" \
+    POSTGRES_HOST="db" \
     POSTGRES_DB="news_service" \
-    POSTGRES_PORT="5433" \
-    REDIS_HOST="localhost" \
+    POSTGRES_PORT="5432" \
+    REDIS_HOST="redis" \
     REDIS_PORT="6380" \
     JWT_SECRET_KEY="my_secret_key" \
     JWT_LIFETIME_MINUTES="1" \
-    REFRESH_TOKEN_LIFETIME_DAYS="1" 
+    REFRESH_TOKEN_LIFETIME_DAYS="1"
 
-2. Создать и активировать виртуальное окружение:
-
-    python -m venv .venv \
-    .venv\Scripts\Activate.ps1
-
-3. Установить необходимые зависимости:
-
-    pip install -r requirements.txt
-
-4. Применить миграции
-
-    Команда для применения всех существующих миграций: \
-    alembic upgrade head
-
-    Для отката последней миграции используйте команду: \
-    alembic downgrade -1
-
-5. Запустить Docker
+2. Запустить Docker
 
     Для этого, например, можно скачать Docker Desktop (для Windows)
 
-5. Запустить базы данных, backend, frontend приложения при помощи Docker файла 
+3. Запустить базы данных, backend, frontend приложения при помощи Docker файла 
 
     docker-compose up
 
@@ -60,3 +43,10 @@ TTL (время жизни) сессий равно времени жизни с
 Также можно протестировать работу backend при помощи инструмента **Postman**.
 
 Посмотреть, как работает frontend приложения, можно по адресу http://localhost:5173/.
+
+## Безопасность
+
++ Пароль хранится в базе данных в хэшированном виде
++ Хэширование производится по криптографическому алгоритму хеширования Argon2
++ Присутствует защита от дублирования логина
++ Присутствует проверка пароля на надёжность: ≥ 8 символов, минимум 1 заглавная, 1 строчная, 1 цифра, 1 спецсимвол
