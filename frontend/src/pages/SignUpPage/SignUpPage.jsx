@@ -98,7 +98,7 @@ function SignUpPage() {
                         id="login"
                         type="login"
                         value={login}
-                        onChange={(e) => SetLogin(e.target.value)}
+                        onChange={(e) => setLogin(e.target.value)}
                         required
                         placeholder="Введите ваш login"
                     />

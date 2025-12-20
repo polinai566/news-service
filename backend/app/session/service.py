@@ -50,7 +50,14 @@ class SessionService:
 
         session_json = json.dumps(new_session)
         lifetime = LIFETIME * 24 * 60 * 60 # в секундах
-        await redis_client.setex(f"session:{user.user_id}:{refresh_token}", lifetime, session_json)
+        try:
+            await redis_client.setex(f"session:{user.user_id}:{refresh_token}", lifetime, session_json)
+        except Exception as e:
+            print(f"Ошибка подключения к Redis: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Ошибка подключения к серверу сессий. Убедитесь, что Redis запущен."
+            )
         return SessionCreate.model_validate(new_session)
     
     # получение списка сессий конкретного пользователя (для админа или для самого пользователя)

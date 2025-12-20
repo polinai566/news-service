@@ -12,8 +12,10 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    # allow_origins=["http://localhost:5173"],  # адрес фронтенда
-    allow_origins=["http://frontend:5173"],  # адрес фронтенда
+    allow_origins=[
+        "http://localhost:5173",  # адрес фронтенда для локальной разработки
+        "http://frontend:5173",   # адрес фронтенда для Docker
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
