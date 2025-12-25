@@ -7,7 +7,10 @@ from fastapi import Depends
 from dotenv import load_dotenv
 from redis.asyncio import Redis as AsyncRedis
 from redis import Redis as SyncRedis
+from app.logging_config import get_logger
 import os
+
+logger = get_logger(__name__)
 
 load_dotenv()
 
@@ -29,7 +32,7 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
         try:
             yield session
         except Exception as e:
-            print(e)
+            logger.error("database_session_error", error=str(e), error_type=type(e).__name__, exc_info=True)
             await session.rollback()
             raise e
         finally:
@@ -40,7 +43,7 @@ def get_sync_db_session() -> Generator[Session, None]:
         try:
             yield session
         except Exception as e:
-            print(e)
+            logger.error("sync_database_session_error", error=str(e), error_type=type(e).__name__, exc_info=True)
             session.rollback()
             raise e
         finally:

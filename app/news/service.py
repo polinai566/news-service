@@ -6,8 +6,11 @@ from .models import News
 from .schemas import NewsCreate, NewsUpdate, NewsRead
 import app.celery as task
 from app.metrics import news_created_total
+from app.logging_config import get_logger
 
 import json
+
+logger = get_logger(__name__)
 
 class NewsService:
     def __init__(self, db: SessionDep):
@@ -30,7 +33,7 @@ class NewsService:
         cached_news_list = await redis_client.get("news_list_all")
         if cached_news_list:
             news_list_data = json.loads(cached_news_list)
-            print("The returned data was taken from the cache") # логирование
+            logger.info("news_list_from_cache", source="cache")
             return [NewsRead.model_validate(news_data) for news_data in news_list_data]
         news = await self.db.execute(select(News))
         news_list = news.scalars().all()
@@ -40,7 +43,7 @@ class NewsService:
         news_list_data = [news_data.model_dump(mode='json') for news_data in news_data_list]
         news_list_json = json.dumps(news_list_data)
         await redis_client.setex("news_list_all", 300, news_list_json) # TTL 5 минут = 300 секунд
-        print("The returned data was taken from the database") # логирование
+        logger.info("news_list_from_database", source="database", count=len(news_data_list))
         return news_data_list
     
     # чтение новости по индексу
@@ -49,7 +52,7 @@ class NewsService:
         if cached_news:
             news_dict = json.loads(cached_news) # десериализация данных из JSON
             news_data = NewsRead.model_validate(news_dict)
-            print("The returned data was taken from the cache") # логирование
+            logger.info("news_from_cache", news_id=news_id, source="cache")
             return news_data
         news = await self.db.execute(select(News).where(News.news_id == news_id))
         news = news.scalar_one_or_none()
@@ -58,7 +61,7 @@ class NewsService:
         news_data = NewsRead.model_validate(news)
         news_json = news_data.model_dump_json() # сериализация данных в JSON
         await redis_client.setex(f"news_{news_id}", 300, news_json) # TTL 5 минут = 300 секунд
-        print("The returned data was taken from the database") # логирование
+        logger.info("news_from_database", news_id=news_id, source="database")
         return news_data
     
     # обновление новости

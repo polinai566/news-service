@@ -1,6 +1,8 @@
 ﻿from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.exceptions import RequestValidationError
+from starlette.exceptions import HTTPException as StarletteHTTPException
 import os
 import asyncio
 
@@ -11,9 +13,24 @@ from .news.urls import router as news_router
 from .user.urls import router as user_router
 from .session.urls import router as session_router
 from .metrics_exporter import metrics_exporter_task
+from .logging_config import setup_structlog
+from .middleware.logging_middleware import LoggingMiddleware
+from .exception_handlers import (
+    http_exception_handler,
+    validation_exception_handler,
+    general_exception_handler
+)
 
 def create_app() -> FastAPI:
     app = FastAPI()  # инициализация приложения
+
+    # инициализация структурированного логирования
+    logstash_host = os.getenv("LOGSTASH_HOST", "localhost")
+    logstash_port = int(os.getenv("LOGSTASH_PORT", "5000"))
+    setup_structlog(logstash_host=logstash_host, logstash_port=logstash_port)
+
+    # middleware для логирования запросов
+    app.add_middleware(LoggingMiddleware)
 
     # CORS для фронтенда
     app.add_middleware(
@@ -39,6 +56,11 @@ def create_app() -> FastAPI:
 
     # базовые метрики Prometheus + эндпоинт /metrics
     Instrumentator().instrument(app).expose(app)
+
+    # обработчики исключений для логирования ошибок
+    app.add_exception_handler(StarletteHTTPException, http_exception_handler)
+    app.add_exception_handler(RequestValidationError, validation_exception_handler)
+    app.add_exception_handler(Exception, general_exception_handler)
 
     # запуск фоновой задачи для экспорта метрик в JSON
     @app.on_event("startup")
