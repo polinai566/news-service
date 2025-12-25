@@ -1,10 +1,11 @@
 from typing import Optional
+from hawk_python_sdk.modules.fastapi import HawkFastapi
 import structlog
 
 logger = structlog.get_logger(__name__)
 _hawk_client = None
 
-def init_hawk(dsn: str = None):
+def init_hawk(app, dsn):
     global _hawk_client
     
     if _hawk_client is not None:
@@ -15,9 +16,10 @@ def init_hawk(dsn: str = None):
         return None
     
     try:
-        from hawk_python_sdk import Hawk
-        _hawk_client = Hawk()
-        _hawk_client.init(dsn=dsn)
+        _hawk_client = HawkFastapi({
+            'app_instance': app,
+            'token': dsn
+        })
         logger.info("Hawk успешно инициализирован")
         return _hawk_client
     except ImportError as e:
@@ -38,9 +40,9 @@ def capture_exception(exc: Exception, context: Optional[dict] = None):
     
     try:
         if context:
-            client.capture(exc, context=context)
+            client.send(exc, context=context)
         else:
-            client.capture(exc)
+            client.send(exc)
         logger.debug("Исключение отправлено в Hawk")
     except Exception as e:
         logger.error(f"Ошибка при отправке в Hawk: {e}")

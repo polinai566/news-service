@@ -36,7 +36,7 @@ def create_app() -> FastAPI:
     # инициализация Hawk для трекинга ошибок
     hawk_dsn = os.environ["HAWK_DSN"]
     if hawk_dsn:
-        init_hawk(dsn=hawk_dsn)
+        init_hawk(app, hawk_dsn)
 
     # middleware для логирования запросов
     app.add_middleware(LoggingMiddleware)

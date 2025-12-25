@@ -34,7 +34,7 @@ def setup_structlog(logstash_host: str = None, logstash_port: int = 5000) -> str
     
     # добавление JSON-процессора для вывода
     if os.getenv("LOG_FORMAT", "json") == "json":
-        processors.append(structlog.processors.JSONRenderer())
+        processors.append(structlog.processors.JSONRenderer(ensure_ascii=False))
     else:
         processors.append(structlog.dev.ConsoleRenderer())
     
