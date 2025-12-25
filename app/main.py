@@ -2,6 +2,7 @@
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
+import asyncio
 
 from prometheus_fastapi_instrumentator import Instrumentator
 
@@ -9,6 +10,7 @@ from .comment.urls import router as comment_router
 from .news.urls import router as news_router
 from .user.urls import router as user_router
 from .session.urls import router as session_router
+from .metrics_exporter import metrics_exporter_task
 
 def create_app() -> FastAPI:
     app = FastAPI()  # инициализация приложения
@@ -37,6 +39,11 @@ def create_app() -> FastAPI:
 
     # базовые метрики Prometheus + эндпоинт /metrics
     Instrumentator().instrument(app).expose(app)
+
+    # запуск фоновой задачи для экспорта метрик в JSON
+    @app.on_event("startup")
+    async def startup_metrics_exporter():
+        asyncio.create_task(metrics_exporter_task(interval_seconds=300, metrics_dir="metrics"))
 
     return app
 

@@ -10,6 +10,12 @@ from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime, timezone
 import logging
 import os
+import time
+from app.metrics import (
+    notifications_sent_total,
+    notifications_failed_total,
+    notification_duration_seconds
+)
 
 app = Celery('celery', broker='redis://localhost:6379')
 app.conf.timezone = 'Europe/Moscow'
@@ -72,6 +78,8 @@ def send_notification_of_new_news(self, news_id):
     if sync_redis_client.exists(key): # проверка идемпотентности
         logger.info(f"Уведомление о новости {news_id} уже было отправлено.")
         return
+    start_time = time.time()
+    notification_type = 'new_news'
     try:
         with SyncSession() as db:
             users = db.execute(select(User))
@@ -80,12 +88,21 @@ def send_notification_of_new_news(self, news_id):
                 message = f"На почту '{user.email}' отправлено уведомление о публикации новой новости (ID: {news_id})."
                 logger.info(message)
             sync_redis_client.setex(key, 86400, "sent") # хранение в кэше - 24 часа
+            # инкремент метрики успешной отправки
+            notifications_sent_total.labels(notification_type=notification_type).inc()
+            # запись времени выполнения
+            duration = time.time() - start_time
+            notification_duration_seconds.labels(notification_type=notification_type).observe(duration)
                 
     except SQLAlchemyError as exc:
         logger.error(f"Ошибка базы данных: {exc}")
+        # инкремент метрики неудачной отправки
+        notifications_failed_total.labels(notification_type=notification_type, error_type='database').inc()
         raise self.retry(exc=exc, countdown=2 ** self.request.retries)
     except Exception as exc:
         logger.error(f"Ошибка: {exc}")
+        # инкремент метрики неудачной отправки
+        notifications_failed_total.labels(notification_type=notification_type, error_type='general').inc()
         raise self.retry(exc=exc, countdown=2 ** self.request.retries)
 
 @common_task_settings()
@@ -95,6 +112,8 @@ def send_weekly_digest(self):
     if sync_redis_client.exists(key): # проверка идемпотентности
         logger.info(f"Еженедельный дайджест для недели {week_key} уже был отправлен.")
         return
+    start_time = time.time()
+    notification_type = 'weekly_digest'
     try:
         with SyncSession() as db:
             users = db.execute(select(User))
@@ -103,12 +122,21 @@ def send_weekly_digest(self):
                 message = f"На почту '{user.email}' отправлен еженедельный дайджест с новостями за неделю."
                 logger.info(message)
             sync_redis_client.setex(key, 691200, "sent") # хранение - 8 дней (> недели)
+            # инкремент метрики успешной отправки
+            notifications_sent_total.labels(notification_type=notification_type).inc()
+            # запись времени выполнения
+            duration = time.time() - start_time
+            notification_duration_seconds.labels(notification_type=notification_type).observe(duration)
 
     except SQLAlchemyError as exc:
         logger.error(f"Ошибка базы данных в еженедельном дайджесте: {exc}")
+        # инкремент метрики неудачной отправки
+        notifications_failed_total.labels(notification_type=notification_type, error_type='database').inc()
         raise self.retry(exc=exc, countdown=2 ** self.request.retries)
     except Exception as exc:
         logger.error(f"Ошибка в еженедельном дайджесте: {exc}")
+        # инкремент метрики неудачной отправки
+        notifications_failed_total.labels(notification_type=notification_type, error_type='general').inc()
         raise self.retry(exc=exc, countdown=2 ** self.request.retries)
 
 # graceful shutdown обработчики

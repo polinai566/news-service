@@ -5,6 +5,7 @@ from app.database import SessionDep, redis_client
 from .models import News
 from .schemas import NewsCreate, NewsUpdate, NewsRead
 import app.celery as task
+from app.metrics import news_created_total
 
 import json
 
@@ -19,6 +20,8 @@ class NewsService:
         await self.db.commit()
         await self.db.refresh(new_news)
         await redis_client.delete("news_list_all")
+        # инкремент метрики создания новости
+        news_created_total.labels(author_id=str(user_id)).inc()
         task.send_notification_of_new_news(new_news.news_id)
         return new_news
     

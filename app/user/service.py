@@ -5,6 +5,7 @@ from app.database import SessionDep, redis_client
 from .models import User
 from .schemas import UserCreate, UserUpdate
 from app.utils import hash_password
+from app.metrics import users_registered_total
 
 class UserService:
     def __init__(self, db: SessionDep):
@@ -21,6 +22,8 @@ class UserService:
         self.db.add(new_user)
         await self.db.commit()
         await self.db.refresh(new_user)
+        # инкремент метрики регистрации пользователя
+        users_registered_total.inc()
         return new_user
 
     # чтение списка пользователей
