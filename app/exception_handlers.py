@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 import structlog
+from app.hawk_config import capture_exception
 
 logger = structlog.get_logger(__name__)
 
@@ -16,6 +17,16 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
         method=request.method,
         request_id=structlog.contextvars.get_contextvars().get("request_id", "unknown")
     )
+    
+    # отправка ошибки в Hawk (только для 5xx ошибок)
+    if exc.status_code >= 500:
+        context = {
+            "path": request.url.path,
+            "method": request.method,
+            "status_code": exc.status_code,
+            "request_id": structlog.contextvars.get_contextvars().get("request_id", "unknown")
+        }
+        capture_exception(exc, context)
     
     return JSONResponse(
         status_code=exc.status_code,
@@ -48,6 +59,14 @@ async def general_exception_handler(request: Request, exc: Exception):
         request_id=structlog.contextvars.get_contextvars().get("request_id", "unknown"),
         exc_info=True
     )
+    
+    # отправка ошибки в Hawk
+    context = {
+        "path": request.url.path,
+        "method": request.method,
+        "request_id": structlog.contextvars.get_contextvars().get("request_id", "unknown")
+    }
+    capture_exception(exc, context)
     
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

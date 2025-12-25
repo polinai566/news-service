@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from dotenv import load_dotenv
 import os
 import asyncio
 
@@ -15,19 +16,27 @@ from .session.urls import router as session_router
 from .metrics_exporter import metrics_exporter_task
 from .logging_config import setup_structlog
 from .middleware.logging_middleware import LoggingMiddleware
+from .hawk_config import init_hawk
 from .exception_handlers import (
     http_exception_handler,
     validation_exception_handler,
     general_exception_handler
 )
 
+load_dotenv()
+
 def create_app() -> FastAPI:
     app = FastAPI()  # инициализация приложения
 
     # инициализация структурированного логирования
-    logstash_host = os.getenv("LOGSTASH_HOST", "localhost")
-    logstash_port = int(os.getenv("LOGSTASH_PORT", "5000"))
+    logstash_host = os.environ["LOGSTASH_HOST"]
+    logstash_port = int(os.environ["LOGSTASH_PORT"])
     setup_structlog(logstash_host=logstash_host, logstash_port=logstash_port)
+    
+    # инициализация Hawk для трекинга ошибок
+    hawk_dsn = os.environ["HAWK_DSN"]
+    if hawk_dsn:
+        init_hawk(dsn=hawk_dsn)
 
     # middleware для логирования запросов
     app.add_middleware(LoggingMiddleware)
