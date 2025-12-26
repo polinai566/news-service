@@ -1,39 +1,93 @@
-import pytest
-from fastapi.testclient import TestClient
+﻿import pytest
 
+# получение списка новостей
 @pytest.mark.asyncio
-async def test_news_crud_flow(client: TestClient, test_user_dict):
-    # регистрация пользователя
-    resp = client.post('/user/register', json=test_user_dict)
-    assert resp.status_code in (200, 201), resp.text
-    user = resp.json()
+async def test_get_empty_news_list(client):
+    response = await client.get("/news/")
+    # если нет новостей, то должно быть 404
+    if response.status_code == 404:
+        assert "No news found" in response.json()["detail"]
+    else:
+        # если есть какие-то данные
+        assert response.status_code == 200
+        data = response.json()
+        assert isinstance(data, list)
 
-    # авторизация
-    login_data = {"username": test_user_dict['username'], "password": test_user_dict['password']}
-    login_resp = client.post('/session/login', json=login_data)
-    assert login_resp.status_code in (200, 201), login_resp.text
-    token = login_resp.json().get("access_token")
 
-    # создание новости
-    news_data = {"title": "Test News", "content": "Test content"}
-    headers = {"Authorization": f"Bearer {token}"}
-    news_resp = client.post('/news/', json=news_data, headers=headers)
-    assert news_resp.status_code in (200, 201), news_resp.text
-    news_id = news_resp.json().get('id')
+# создание новости без авторизации
+@pytest.mark.asyncio
+async def test_create_news_unauthorized(client):
+    news_data = {
+        "header": "Test News",
+        "content": "Test content",
+        "cover": "https://example.com/image.jpg"
+    }
+    response = await client.post("/news/", json=news_data)
+    assert response.status_code == 401
 
-    # чтение новости
-    read_resp = client.get(f'/news/{news_id}')
-    assert read_resp.status_code == 200, read_resp.text
-    assert read_resp.json()['title'] == news_data['title']
 
-    # редактирование новости
-    new_data = {"title": "Updated News", "content": "Updated content"}
-    upd_resp = client.put(f'/news/{news_id}', json=new_data, headers=headers)
-    assert upd_resp.status_code == 200
-    assert upd_resp.json()['title'] == new_data['title']
+# создание пользователя, обновление роли и создание новости
+@pytest.mark.asyncio
+async def test_full_news_flow(client, test_user_data, mock_admin_data):
+    # создаем нового пользователя (по умолчанию role='user')
+    user_response = await client.post("/user/", json=test_user_data)
+    assert user_response.status_code == 200
+    user_id = user_response.json()["user_id"]
+    
+    # авторизация админа
+    admin_login_response = await client.post("/session/", json=mock_admin_data)
+    assert admin_login_response.status_code == 200
+    admin_jwt = admin_login_response.headers.get("x-jwt")
+    admin_headers = {"Authorization": f"Bearer {admin_jwt}"}
 
-    # удаление новости
-    del_resp = client.delete(f'/news/{news_id}', headers=headers)
-    assert del_resp.status_code == 200
-    assert del_resp.json()['ok'] is True
+    # обновление роли нового пользователя
+    update_data = {
+        "user_name": test_user_data["user_name"],
+        "email": test_user_data["email"],
+        "user_role": "author"  # смена роли с user на author
+    }
+    
+    update_response = await client.put(f"/user/{user_id}", json=update_data, headers=admin_headers)
+    assert update_response.status_code == 200
 
+    updated_user = update_response.json()
+    assert updated_user["user_role"] == "author"
+    await client.delete("/session/", headers=admin_headers)
+
+    # авторизация автора
+    user_login_data = {
+        "email": test_user_data["email"],
+        "password": test_user_data["password"]
+    }
+    user_login_response = await client.post("/session/", json=user_login_data)
+    assert user_login_response.status_code == 200
+    user_jwt = user_login_response.headers.get("x-jwt")
+    user_headers = {"Authorization": f"Bearer {user_jwt}"}
+
+    # создание новости автором
+    news_data = {
+        "header": "My First News",
+        "content": "This is a test news article",
+        "cover": "https://example.com/image.jpg"
+    }
+    news_response = await client.post("/news/", json=news_data, headers=user_headers)
+    assert news_response.status_code == 200
+    
+    news = news_response.json()
+    assert news["header"] == news_data["header"]
+    news_id = news["news_id"]
+    
+    # получение списка всех новостей
+    list_response = await client.get("/news/")
+    assert list_response.status_code == 200
+    news_list = list_response.json()
+    assert isinstance(news_list, list)
+    
+    # получение конкретной новости по ID
+    single_response = await client.get(f"/news/{news_id}")
+    assert single_response.status_code == 200
+    single_news = single_response.json()
+    assert single_news["news_id"] == news_id
+    assert single_news["header"] == news_data["header"]
+
+    await client.delete("/session/", headers=user_headers)

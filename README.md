@@ -21,8 +21,8 @@
 
 1. Создать файл .env со строками по следующему образцу:
 
-    DATABASE_URL=postgresql+asyncpg://postgres:password@localhost:5432/db \
-    ALEMBIC_DATABASE_URL=postgresql://postgres:password@localhost:5432/db \
+    ASYNC_DATABASE_URL=postgresql+asyncpg://postgres:password@localhost:5432/db \
+    SYNC_DATABASE_URL=postgresql://postgres:password@localhost:5432/db \
     JWT_SECRET_KEY=your-secret-key \
     JWT_LIFETIME_MINUTES=10 \
     REFRESH_TOKEN_LIFETIME_DAYS=1 \

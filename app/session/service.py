@@ -29,7 +29,7 @@ class SessionService:
         user = result.scalar_one_or_none()
         # проверка существования логина (email)
         if user == None:
-            return "This email is not registered"
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="This email is not registered")
         # проверка пароля
         if not check_password(payload.password, user.password): 
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect password")

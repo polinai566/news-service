@@ -16,7 +16,7 @@ from alembic import context
 from dotenv import load_dotenv
 
 load_dotenv()
-url = os.environ["ALEMBIC_DATABASE_URL"]
+url = os.environ["SYNC_DATABASE_URL"]
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

@@ -14,14 +14,14 @@ logger = get_logger(__name__)
 
 load_dotenv()
 
-DATABASE_URL = os.environ["DATABASE_URL"]
+ASYNC_DATABASE_URL = os.environ["ASYNC_DATABASE_URL"]
 REDIS_HOST = os.environ["REDIS_HOST"]
 REDIS_PORT = int(os.environ["REDIS_PORT"])
 
-async_engine = create_async_engine(DATABASE_URL)
+async_engine = create_async_engine(ASYNC_DATABASE_URL)
 AsyncSessionLocal = async_sessionmaker(bind=async_engine)
 
-SYNC_DATABASE_URL = DATABASE_URL.replace('asyncpg', 'psycopg2')
+SYNC_DATABASE_URL = ASYNC_DATABASE_URL.replace('asyncpg', 'psycopg2')
 sync_engine = create_engine(SYNC_DATABASE_URL)
 SyncSession = sessionmaker(bind=sync_engine)
 
