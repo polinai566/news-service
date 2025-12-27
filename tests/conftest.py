@@ -2,7 +2,8 @@ import os
 import asyncio
 import psycopg2
 import pytest
-import httpx
+from httpx import AsyncClient, ASGITransport
+from app.main import app
 import redis
 from dotenv import load_dotenv
 
@@ -84,8 +85,11 @@ def event_loop():
 # асинхронный тестовый клиент
 @pytest.fixture
 async def client():
-    async with httpx.AsyncClient(base_url=BASE_URL) as client:
-        yield client
+    async with AsyncClient(
+        transport=ASGITransport(app=app),
+        base_url="http://test"
+    ) as ac:
+        yield ac
 
 # данные для тестового пользователя
 @pytest.fixture

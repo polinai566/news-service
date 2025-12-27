@@ -4,3 +4,5 @@
 logs/
 metrics/
 *.log
+htmlcov/
+.pytest_cache/
