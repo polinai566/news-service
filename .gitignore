@@ -6,3 +6,4 @@ metrics/
 *.log
 htmlcov/
 .pytest_cache/
+.coverage

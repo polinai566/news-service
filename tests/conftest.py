@@ -2,10 +2,10 @@ import os
 import asyncio
 import psycopg2
 import pytest
-from httpx import AsyncClient, ASGITransport
-from app.main import app
+from httpx import AsyncClient
 import redis
 from dotenv import load_dotenv
+from app.main import create_app
 
 load_dotenv()
 
@@ -82,14 +82,11 @@ def event_loop():
     yield loop
     loop.close()
 
-# асинхронный тестовый клиент
+# асинхронный тестовый клиент (возвращаем к старой версии)
 @pytest.fixture
 async def client():
-    async with AsyncClient(
-        transport=ASGITransport(app=app),
-        base_url="http://test"
-    ) as ac:
-        yield ac
+    async with AsyncClient(base_url=BASE_URL) as client:
+        yield client
 
 # данные для тестового пользователя
 @pytest.fixture

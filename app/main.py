@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from dotenv import load_dotenv
+from contextlib import asynccontextmanager
 import os
 import asyncio
 
@@ -25,18 +26,35 @@ from .exception_handlers import (
 
 load_dotenv()
 
-def create_app() -> FastAPI:
-    app = FastAPI()  # инициализация приложения
-
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     # инициализация структурированного логирования
     logstash_host = os.environ["LOGSTASH_HOST"]
     logstash_port = int(os.environ["LOGSTASH_PORT"])
     setup_structlog(logstash_host=logstash_host, logstash_port=logstash_port)
     
     # инициализация Hawk для трекинга ошибок
-    hawk_dsn = os.environ["HAWK_DSN"]
+    hawk_dsn = os.environ.get("HAWK_DSN")
     if hawk_dsn:
         init_hawk(app, hawk_dsn)
+    
+    # запуск фоновой задачи для экспорта метрик в JSON
+    metrics_task = asyncio.create_task(
+        metrics_exporter_task(interval_seconds=300, metrics_dir="metrics")
+    )
+    app.state.metrics_task = metrics_task
+    
+    yield
+    
+    if hasattr(app.state, 'metrics_task'):
+        app.state.metrics_task.cancel()
+        try:
+            await app.state.metrics_task
+        except asyncio.CancelledError:
+            pass
+
+def create_app() -> FastAPI:
+    app = FastAPI(lifespan=lifespan)  # инициализация приложения
 
     # middleware для логирования запросов
     app.add_middleware(LoggingMiddleware)
@@ -70,11 +88,6 @@ def create_app() -> FastAPI:
     app.add_exception_handler(StarletteHTTPException, http_exception_handler)
     app.add_exception_handler(RequestValidationError, validation_exception_handler)
     app.add_exception_handler(Exception, general_exception_handler)
-
-    # запуск фоновой задачи для экспорта метрик в JSON
-    @app.on_event("startup")
-    async def startup_metrics_exporter():
-        asyncio.create_task(metrics_exporter_task(interval_seconds=300, metrics_dir="metrics"))
 
     return app
 
