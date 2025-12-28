@@ -1,4 +1,4 @@
-﻿from jwt import InvalidSignatureError, ExpiredSignatureError, InvalidTokenError
+from jwt import InvalidSignatureError, ExpiredSignatureError, InvalidTokenError
 from dotenv import load_dotenv
 from datetime import datetime, timedelta, timezone
 from fastapi_sso.sso.github import GithubSSO

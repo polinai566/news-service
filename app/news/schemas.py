@@ -1,4 +1,4 @@
-﻿from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 from typing import Optional, Any
 from app.user.schemas import UserRead

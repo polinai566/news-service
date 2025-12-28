@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 
 # тест полного цикла работы с комментариями
 @pytest.mark.asyncio

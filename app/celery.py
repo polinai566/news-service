@@ -1,4 +1,4 @@
-﻿from time import timezone
+from time import timezone
 from celery import Celery
 from celery.schedules import crontab
 from app.database import SyncSession, sync_redis_client

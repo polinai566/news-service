@@ -1,4 +1,4 @@
-﻿from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends
 from .schemas import CommentCreate, CommentRead, CommentUpdate
 from .service import CommentService
 from .models import Comment

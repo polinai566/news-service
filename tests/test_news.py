@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 
 # получение списка новостей
 @pytest.mark.asyncio

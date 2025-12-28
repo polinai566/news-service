@@ -1,4 +1,4 @@
-﻿from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends
 from .schemas import NewsCreate, NewsRead, NewsUpdate
 from .service import NewsService
 from .models import News

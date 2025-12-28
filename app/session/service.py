@@ -1,4 +1,4 @@
-﻿from fastapi import Response, Request, status, HTTPException
+from fastapi import Response, Request, status, HTTPException
 from fastapi.responses import JSONResponse
 from sqlalchemy import select
 from collections.abc import AsyncIterator

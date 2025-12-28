@@ -1,4 +1,4 @@
-﻿from typing import Sequence
+from typing import Sequence
 from sqlalchemy import select
 from fastapi import HTTPException, status
 from app.database import SessionDep, redis_client
