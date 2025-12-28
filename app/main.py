@@ -33,11 +33,6 @@ async def lifespan(app: FastAPI):
     logstash_port = int(os.environ["LOGSTASH_PORT"])
     setup_structlog(logstash_host=logstash_host, logstash_port=logstash_port)
     
-    # инициализация Hawk для трекинга ошибок
-    hawk_dsn = os.environ.get("HAWK_DSN")
-    if hawk_dsn:
-        init_hawk(app, hawk_dsn)
-    
     # запуск фоновой задачи для экспорта метрик в JSON
     metrics_task = asyncio.create_task(
         metrics_exporter_task(interval_seconds=300, metrics_dir="metrics")
@@ -68,6 +63,11 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
         expose_headers=["x-jwt"],
     )
+
+    # инициализация Hawk для трекинга ошибок
+    hawk_dsn = os.environ.get("HAWK_DSN")
+    if hawk_dsn:
+        init_hawk(app, hawk_dsn)
 
     # статика для обложек новостей
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
