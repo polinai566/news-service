@@ -21,8 +21,6 @@ class CommentService:
     async def list(self, news_id) -> Sequence[Comment]:
         comments = await self.db.execute(select(Comment).where(Comment.news_id == news_id))
         comments_list = comments.scalars().all()
-        if not comments_list:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No comments found")
         return comments_list
     
     # чтение комментария по индексу

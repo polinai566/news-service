@@ -37,8 +37,6 @@ class NewsService:
             return [NewsRead.model_validate(news_data) for news_data in news_list_data]
         news = await self.db.execute(select(News))
         news_list = news.scalars().all()
-        if not news_list:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No news found")
         news_data_list = [NewsRead.model_validate(news) for news in news_list]
         news_list_data = [news_data.model_dump(mode='json') for news_data in news_data_list]
         news_list_json = json.dumps(news_list_data)
