@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import Avatar from '../Avatar/Avatar';
 import './CommentCard.css';
 

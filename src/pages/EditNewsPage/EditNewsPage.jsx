@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { newsAPI } from '../../api/index';
 import { convertEditorJsToText } from '../../utils/convertEditorJsToText';

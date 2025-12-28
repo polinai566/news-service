@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import './Avatar.css';
 
 function Avatar({ src, alt, size = 'medium', className = '' }) {

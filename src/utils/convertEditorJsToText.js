@@ -1,4 +1,4 @@
-﻿export const convertEditorJsToText = (editorJsContent) => {
+export const convertEditorJsToText = (editorJsContent) => {
     if (!editorJsContent) return '';
     
     let blocks = [];

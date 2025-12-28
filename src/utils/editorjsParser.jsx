@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 
 export function getContentPreview(content, maxLength = 150) {
     if (!content) return 'Нет содержания';

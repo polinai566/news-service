@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { newsAPI } from '../../api/index';
 import NewsCard from '../../components/NewsCard/NewsCard';
 import './HomePage.css';

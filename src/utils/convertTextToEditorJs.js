@@ -1,4 +1,4 @@
-﻿// функция преобразования обычного текста в формат Editor.js
+// функция преобразования обычного текста в формат Editor.js
 export const convertTextToEditorJs = (text) => {
     // разбиение текста на абзацы (по пустым строкам)
     const paragraphs = text.split(/\n\s*\n/);
