@@ -1,5 +1,4 @@
 import os
-import asyncio
 import psycopg2
 import pytest
 from httpx import AsyncClient
@@ -13,7 +12,6 @@ ASYNC_DATABASE_URL = os.environ["ASYNC_DATABASE_URL"]
 SYNC_DATABASE_URL = os.environ["SYNC_DATABASE_URL"]
 REDIS_HOST = os.environ["REDIS_HOST"]
 REDIS_PORT = int(os.environ["REDIS_PORT"])
-
 BASE_URL = "http://localhost:8000"
 
 # список тестовых email
@@ -26,7 +24,6 @@ TEST_EMAILS = [
 
 # очистка тестовых данных из БД и Redis
 def clean_test_data():
-    # очистка Redis
     redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=0, decode_responses=True)
     
     conn = psycopg2.connect(SYNC_DATABASE_URL)
@@ -75,14 +72,7 @@ def clean_db_before_each_test():
     yield
     clean_test_data()
 
-# создание event loop для асинхронных тестов
-@pytest.fixture(scope="session")
-def event_loop():
-    loop = asyncio.new_event_loop()
-    yield loop
-    loop.close()
-
-# асинхронный тестовый клиент (возвращаем к старой версии)
+# асинхронный тестовый клиент
 @pytest.fixture
 async def client():
     async with AsyncClient(base_url=BASE_URL) as client:
