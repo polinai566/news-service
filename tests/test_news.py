@@ -4,14 +4,9 @@ import pytest
 @pytest.mark.asyncio
 async def test_get_empty_news_list(client):
     response = await client.get("/news/")
-    # если нет новостей, то должно быть 404
-    if response.status_code == 404:
-        assert "No news found" in response.json()["detail"]
-    else:
-        # если есть какие-то данные
-        assert response.status_code == 200
-        data = response.json()
-        assert isinstance(data, list)
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
 
 
 # создание новости без авторизации

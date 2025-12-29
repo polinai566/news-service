@@ -56,8 +56,10 @@ async def test_create_comment_unauthorized(client):
 @pytest.mark.asyncio
 async def test_get_comments_for_nonexistent_news(client):
     response = await client.get("/comment/news/99999")
-    assert response.status_code == 404
-    assert "No comments found" in response.json()["detail"]
+    assert response.status_code == 200
+    comments = response.json()
+    assert isinstance(comments, list)
+    assert len(comments) == 0
 
 
 # тест создания комментария к несуществующей новости
