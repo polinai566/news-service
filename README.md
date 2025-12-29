@@ -33,7 +33,7 @@
     REDIS_PORT=6379 \
     LOGSTASH_HOST=localhost \
     LOGSTASH_PORT=5000 \
-    HAWK_DSN=your-hawk-dsn
+    HAWK_DSN=your-integration-token
     
     Для получения Client ID, Client Secret и Client Redirect:
 
@@ -42,7 +42,7 @@
     - нажмите **Зарегистрировать заявку**
     - после регистрации GitHub предоставит Вам Client ID и Client Secret
 
-    УЗапишите в REDIS_HOST ваш host, а в REDIS_PORT ваш порт (по умолчанию 6379). \
+    Запишите в REDIS_HOST ваш host, а в REDIS_PORT ваш порт (по умолчанию 6379). \
     Запустить Redis можно при помощи команды:
 
     ```bash
@@ -208,11 +208,11 @@ Hawk используется для автоматического отслеж
 **Настройка Hawk:** 
 1. Зарегистрируйтесь на https://hawk.so
 2. Создайте workspace и проект
-3. Получите DSN (Data Source Name) для вашего проекта
-4. Добавьте DSN в `.env` файл: 
+3. Получите Integration token для вашего проекта
+4. Добавьте Integration token в `.env` файл: 
 
    ```
-   HAWK_DSN=your-hawk-dsn
+   HAWK_DSN=your-integration-token
    ```
 
 **Отправка ошибок:**
