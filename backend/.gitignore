@@ -1,0 +1,10 @@
+.venv/
+*.pyc
+.jj
+.env
+logs/
+metrics/
+*.log
+htmlcov/
+.pytest_cache/
+.coverage
