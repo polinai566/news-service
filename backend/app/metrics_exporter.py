@@ -2,7 +2,7 @@ import json
 import os
 import asyncio
 from datetime import datetime
-from typing import Dict, Any, List
+from typing import Dict, Any
 from prometheus_client import REGISTRY
 from prometheus_client.core import (
     CounterMetricFamily,

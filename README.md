@@ -19,21 +19,24 @@
 
 ## Шаги для запуска сервиса
 
-1. Создать файл .env со строками по следующему образцу:
+1. Создать в корне проекта файл .env со строками по следующему образцу:
 
-    ASYNC_DATABASE_URL=postgresql+asyncpg://postgres:password@localhost:5432/db \
-    SYNC_DATABASE_URL=postgresql://postgres:password@localhost:5432/db \
-    JWT_SECRET_KEY=your-secret-key \
-    JWT_LIFETIME_MINUTES=10 \
-    REFRESH_TOKEN_LIFETIME_DAYS=1 \
-    GITHUB_CLIENT_ID=your-client-id \
-    GITHUB_CLIENT_SECRET=your-client-secret \
-    GITHUB_CLIENT_REDIRECT=http://localhost:8000/session/auth/callback \
-    REDIS_HOST=localhost \
-    REDIS_PORT=6379 \
-    LOGSTASH_HOST=localhost \
-    LOGSTASH_PORT=5000 \
-    HAWK_DSN=your-integration-token
+    POSTGRES_USER="postgres"
+    POSTGRES_PASSWORD="password"
+    POSTGRES_HOST="db"
+    POSTGRES_DB="news_service"
+    POSTGRES_PORT="5432"
+    REDIS_HOST="redis"
+    REDIS_PORT="6380"
+    JWT_SECRET_KEY="your-secret-key"
+    JWT_LIFETIME_MINUTES="10"
+    REFRESH_TOKEN_LIFETIME_DAYS="1"
+    GITHUB_CLIENT_ID="your-client-id" \
+    GITHUB_CLIENT_SECRET="your-client-secret" \
+    GITHUB_CLIENT_REDIRECT="http://localhost:8000/session/auth/callback" \
+    LOGSTASH_HOST="localhost"
+    LOGSTASH_PORT="5000"
+    HAWK_DSN="your-integration-token"
     
     Для получения Client ID, Client Secret и Client Redirect:
 
@@ -42,42 +45,14 @@
     - нажмите **Зарегистрировать заявку**
     - после регистрации GitHub предоставит Вам Client ID и Client Secret
 
-    Запишите в REDIS_HOST ваш host, а в REDIS_PORT ваш порт (по умолчанию 6379). \
-    Запустить Redis можно при помощи команды:
+2. Запустить Docker:
+
+    Для этого, например, можно скачать Docker Desktop (для Windows)
+
+3. Запустить backend, frontend и прочие приложения при помощи файла docker-compose.yaml
 
     ```bash
-    docker-compose up redis
-    ```
-
-2. Создать и активировать виртуальное окружение:
-
-    ```bash
-    python -m venv .venv
-    .venv\Scripts\activate
-    ```
-
-3. Установить необходимые зависимости:
-
-    ```bash
-    pip install -r requirements.txt
-    ```
-
-4. Применить миграции
-
-    Команда для применения всех существующих миграций: \
-    ```bash
-    alembic upgrade head
-    ```
-
-    Для отката последней миграции используйте команду: \
-    ```bash
-    alembic downgrade -1
-    ```
-
-5. Запустить приложение
-
-    ```bash
-    uvicorn app.main:app
+    docker-compose up
     ```
 
 ## Описание и использование ручек
@@ -106,7 +81,7 @@ alembic revision -m "Add users, news and comments"
 - для user_id = 2 (author): email = 'mitya@mail.ru', password = '87654321'
 - для user_id = 3 (user): email = 'danya@mail.ru', password = '12348765'
 
-Подробнее о том, как работает текущая ролевая модель можно прочесть в docs/auth.md.
+Подробнее о том, как работает текущая ролевая модель можно прочесть в backend/docs/auth.md.
 
 ## Структура взаимодействия с БД и Redis
 
@@ -148,7 +123,7 @@ docker-compose up prometheus grafana
 
 **Настройка Grafana:**
 1. Войдите в Grafana
-2. Перейдите в Settings → Data sources → Add data source
+2. Перейдите в Connections → Data sources → Add data source
 3. Выберите Prometheus
 4. Укажите URL: `http://prometheus:9090`
 5. Сохраните

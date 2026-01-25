@@ -4,6 +4,7 @@ from sqlalchemy import pool
 from alembic import context
 import os
 import sys
+from dotenv import load_dotenv
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
@@ -12,11 +13,14 @@ from app.user.models import User
 from app.news.models import News
 from app.comment.models import Comment
 
-from alembic import context
-from dotenv import load_dotenv
-
 load_dotenv()
-url = os.environ["SYNC_DATABASE_URL"]
+USER = os.environ["POSTGRES_USER"]
+PASSWORD = os.environ["POSTGRES_PASSWORD"]
+HOST = os.environ["POSTGRES_HOST"]
+DB = os.environ["POSTGRES_DB"]
+PORT = os.environ["POSTGRES_PORT"]
+
+url = f"postgresql://{USER}:{PASSWORD}@{HOST}:{PORT}/{DB}"
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

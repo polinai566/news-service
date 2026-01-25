@@ -14,10 +14,15 @@ logger = get_logger(__name__)
 
 load_dotenv()
 
-ASYNC_DATABASE_URL = os.environ["ASYNC_DATABASE_URL"]
+USER = os.environ["POSTGRES_USER"]
+PASSWORD = os.environ["POSTGRES_PASSWORD"]
+HOST = os.environ["POSTGRES_HOST"]
+DB = os.environ["POSTGRES_DB"]
+PORT = os.environ["POSTGRES_PORT"]
 REDIS_HOST = os.environ["REDIS_HOST"]
 REDIS_PORT = int(os.environ["REDIS_PORT"])
 
+ASYNC_DATABASE_URL = (f"postgresql+asyncpg://{USER}:{PASSWORD}@{HOST}:{PORT}/{DB}")
 async_engine = create_async_engine(ASYNC_DATABASE_URL)
 AsyncSessionLocal = async_sessionmaker(bind=async_engine)
 
@@ -38,7 +43,7 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
         finally:
             await session.close()
 
-def get_sync_db_session() -> Generator[Session, None]:
+def get_sync_db_session() -> Generator[Session, None, None]:
     with SyncSession() as session:
         try:
             yield session
