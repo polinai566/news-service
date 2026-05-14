@@ -37,6 +37,7 @@
     LOGSTASH_HOST="localhost"
     LOGSTASH_PORT="5000"
     HAWK_DSN="your-integration-token"
+    PASETO_SECRET_KEY="my-strong-secret-key"
     
     Для получения Client ID, Client Secret и Client Redirect:
 
