@@ -11,8 +11,8 @@ async def test_comment_flow(client, test_user_data):
         "password": test_user_data["password"]
     }
     login_response = await client.post("/session/", json=login_data)
-    jwt_token = login_response.headers["x-jwt"]
-    headers = {"Authorization": f"Bearer {jwt_token}"}
+    paseto_token = login_response.headers["x-paseto"]
+    headers = {"Authorization": f"Bearer {paseto_token}"}
     
     # получение списка новостей
     news_response = await client.get("/news/")
@@ -73,8 +73,8 @@ async def test_create_comment_for_nonexistent_news(client, test_user_data):
         "password": test_user_data["password"]
     }
     login_response = await client.post("/session/", json=login_data)
-    jwt_token = login_response.headers["x-jwt"]
-    headers = {"x-jwt": jwt_token}
+    paseto_token = login_response.headers["x-paseto"]
+    headers = {"x-paseto": paseto_token}
     
     # попытка создать комментарий к несуществующей новости
     comment_data = {

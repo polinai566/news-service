@@ -32,8 +32,8 @@ async def test_full_news_flow(client, test_user_data, mock_admin_data):
     # авторизация админа
     admin_login_response = await client.post("/session/", json=mock_admin_data)
     assert admin_login_response.status_code == 200
-    admin_jwt = admin_login_response.headers.get("x-jwt")
-    admin_headers = {"Authorization": f"Bearer {admin_jwt}"}
+    admin_paseto = admin_login_response.headers.get("x-paseto")
+    admin_headers = {"Authorization": f"Bearer {admin_paseto}"}
 
     # обновление роли нового пользователя
     update_data = {
@@ -56,8 +56,8 @@ async def test_full_news_flow(client, test_user_data, mock_admin_data):
     }
     user_login_response = await client.post("/session/", json=user_login_data)
     assert user_login_response.status_code == 200
-    user_jwt = user_login_response.headers.get("x-jwt")
-    user_headers = {"Authorization": f"Bearer {user_jwt}"}
+    user_paseto = user_login_response.headers.get("x-paseto")
+    user_headers = {"Authorization": f"Bearer {user_paseto}"}
 
     # создание новости автором
     news_data = {

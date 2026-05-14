@@ -65,7 +65,7 @@ api.interceptors.response.use(
             try {
                 // попытка обновить токен
                 const refreshResponse = await authAPI.refresh(refreshToken);
-                const newJwtToken = refreshResponse.headers['x-jwt'];
+                const newJwtToken = refreshResponse.headers['x-paseto'];
                 const newRefreshToken = refreshResponse.data.refresh_token;
                 
                 if (!newJwtToken) {

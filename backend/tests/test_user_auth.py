@@ -43,11 +43,11 @@ async def test_successful_login(client, test_user_data):
     assert response.status_code == 200
     data = response.json()
     assert "refresh_token" in data
-    assert "x-jwt" in response.headers  # JWT в заголовках
+    assert "x-paseto" in response.headers  # PASETO в заголовках
     
     # logout после теста
-    jwt_token = response.headers["x-jwt"]
-    headers = {"Authorization": f"Bearer {jwt_token}"}
+    paseto_token = response.headers["x-paseto"]
+    headers = {"Authorization": f"Bearer {paseto_token}"}
     logout_response = await client.delete("/session/", headers=headers)
     assert logout_response.status_code == 200
 

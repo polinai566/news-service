@@ -23,3 +23,6 @@ class UserRead(UserBase):
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+
+class UserIdResponse(BaseModel):
+    user_id: int

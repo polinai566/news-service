@@ -34,9 +34,9 @@ class SessionService:
         if not check_password(payload.password, user.password): 
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect password")
         
-        # создание JWT токена
+        # создание PASETO токена
         paseto_token = create_paseto_token(user.user_id, user.user_role) 
-        response.headers["x-jwt"] = paseto_token
+        response.headers["x-paseto"] = paseto_token
         # извлечение user_agent из заголовка запроса
         user_agent = request.headers.get("User-Agent")
         # создание refresh токена
@@ -99,7 +99,7 @@ class SessionService:
         
         new_refresh_token = generation_refresh_token()
         paseto_token = create_paseto_token(session["user_id"], user.user_role)
-        response.headers["x-jwt"] = paseto_token
+        response.headers["x-paseto"] = paseto_token
         
         new_session = {
             "user_id": user.user_id,
@@ -117,8 +117,8 @@ class SessionService:
         return SessionCreate.model_validate(new_session)
 
     # удаление сессии (выход)
-    async def delete(self, request: Request, jwt_payload) -> None | str:
-        user_id = jwt_payload['user_id']
+    async def delete(self, request: Request, paseto_payload) -> None | str:
+        user_id = paseto_payload['user_id']
         session_keys_iter: AsyncIterator[str] = redis_client.scan_iter(f"session:{user_id}:*")
         session_keys = [key async for key in session_keys_iter]
         session_list = [
@@ -170,7 +170,7 @@ class SessionService:
             user = new_user
 
         paseto_token = create_paseto_token(user.user_id, user.user_role)
-        response.headers["x-jwt"] = paseto_token
+        response.headers["x-paseto"] = paseto_token
         user_agent = request.headers.get("User-Agent")
         refresh_token = generation_refresh_token()
         

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from .schemas import UserCreate, UserRead, UserUpdate
+from .schemas import UserCreate, UserRead, UserUpdate, UserIdResponse
 from .service import UserService
 from app.depends import is_admin, same_user_or_admin
 
@@ -8,7 +8,7 @@ router = APIRouter(tags=["users"])
 async def user_service(service: UserService = Depends()) -> UserService:
     return service
 
-@router.post("/", response_model=UserRead | str)
+@router.post("/", response_model=UserIdResponse)
 async def register_user(payload: UserCreate, service: UserService = Depends(user_service)):
     return await service.create(payload)
 
@@ -20,7 +20,7 @@ async def get_users(service: UserService = Depends(user_service), _ = Depends(is
 async def get_user_by_id(user_id: int, service: UserService = Depends(user_service), _ = Depends(same_user_or_admin)):
     return await service.get(user_id)
 
-@router.put("/{user_id}", response_model=UserRead)
+@router.put("/{user_id}", response_model=UserIdResponse)
 async def update_user(user_id: int, payload: UserUpdate, service: UserService = Depends(user_service), _ = Depends(same_user_or_admin)):
     return await service.update(user_id, payload)
 

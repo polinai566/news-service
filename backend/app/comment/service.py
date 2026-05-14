@@ -3,19 +3,19 @@ from sqlalchemy import select
 from fastapi import HTTPException, status
 from app.database import SessionDep
 from .models import Comment
-from .schemas import CommentCreate, CommentUpdate
+from .schemas import CommentCreate, CommentUpdate, CommentIdResponse
 
 class CommentService:
     def __init__(self, db: SessionDep):
         self.db = db
 
     # создание комментария
-    async def create(self, payload: CommentCreate, user_id: int) -> Comment:
+    async def create(self, payload: CommentCreate, user_id: int) -> CommentIdResponse:
         new_comment = Comment(**payload.model_dump(), author_id = user_id)
         self.db.add(new_comment)
         await self.db.commit()
         await self.db.refresh(new_comment)
-        return new_comment
+        return {"comment_id": new_comment.comment_id}
     
     # чтение списка комментариев конкретной новости
     async def list(self, news_id) -> Sequence[Comment]:
@@ -32,12 +32,12 @@ class CommentService:
         return comment
     
     # обновление комментария
-    async def update(self, comment, payload: CommentUpdate) -> Comment:
+    async def update(self, comment, payload: CommentUpdate) -> CommentIdResponse:
         for field, value in payload.model_dump(exclude_unset=True).items():
             setattr(comment, field, value)
         await self.db.commit()
         await self.db.refresh(comment)
-        return comment
+        return {"comment_id": comment.comment_id}
     
     # удаление комментария
     async def delete(self, comment) -> str:

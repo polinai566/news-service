@@ -20,3 +20,6 @@ class NewsRead(NewsBase):
     author_id: int
     author: UserRead
     model_config = ConfigDict(from_attributes=True)
+
+class NewxIdResponse(BaseModel):
+    news_id: int

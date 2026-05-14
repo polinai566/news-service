@@ -18,3 +18,6 @@ class CommentRead(CommentBase):
     author: UserRead
     publication_date: datetime
     model_config = ConfigDict(from_attributes=True)
+
+class CommentIdResponse(BaseModel):
+    news_id: int

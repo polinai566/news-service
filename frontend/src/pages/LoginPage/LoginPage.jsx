@@ -30,15 +30,15 @@ function LoginPage({ setIsAuthenticated, setUser }) {
     	  	setLoading(true);
     	  	const response = await authAPI.login(email, password);
 
-    	  	// получение JWT токена из заголовка
-    	  	const jwtToken = response.headers['x-jwt'];
+    	  	// получение PASETO токена из заголовка
+    	  	const paseto_token = response.headers['x-paseto'];
 
-    	  	if (!jwtToken) {
+    	  	if (!paseto_token) {
     	  	  	throw new Error('Токен не получен от сервера');
     	  	}
 
     	  	// сохранение access токена в localStorage
-    	  	localStorage.setItem('token', jwtToken);
+    	  	localStorage.setItem('token', paseto_token);
 
             const sessionData = response.data;
             if (!sessionData || !sessionData.user_id) {

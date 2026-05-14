@@ -3,7 +3,7 @@ from sqlalchemy import select
 from fastapi import HTTPException, status
 from app.database import SessionDep, redis_client
 from .models import User
-from .schemas import UserCreate, UserUpdate
+from .schemas import UserCreate, UserUpdate, UserIdResponse
 from app.utils import hash_password
 from app.metrics import users_registered_total
 
@@ -12,7 +12,7 @@ class UserService:
         self.db = db
 
     # регистрация пользователя
-    async def create(self, payload: UserCreate) -> User | str:
+    async def create(self, payload: UserCreate) -> UserIdResponse:
         # проверка уникальности email
         existing_user = await self.db.execute(select(User).where(User.email == payload.email))
         if existing_user.scalar_one_or_none():
@@ -24,7 +24,7 @@ class UserService:
         await self.db.refresh(new_user)
         # инкремент метрики регистрации пользователя
         users_registered_total.inc()
-        return new_user
+        return {"user_id": new_user.user_id}
 
     # чтение списка пользователей
     async def list(self) -> Sequence[User]:
@@ -43,7 +43,7 @@ class UserService:
         return user
 
     # обновление пользователя
-    async def update(self, user_id: int, payload: UserUpdate) -> User:
+    async def update(self, user_id: int, payload: UserUpdate) -> UserIdResponse:
         user = await self.db.execute(select(User).where(User.user_id == user_id))
         user = user.scalar_one_or_none()
         if not user:
@@ -68,7 +68,7 @@ class UserService:
         session_keys = [key async for key in session_keys_iter]
         if session_keys != []:
             for key in session_keys: await redis_client.delete(key)
-        return user
+        return {"user_id": user_id}
 
     # удаление пользователя
     async def delete(self, user_id: int) -> str:

@@ -64,7 +64,7 @@ def create_app() -> FastAPI:
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
-        expose_headers=["x-jwt"],
+        expose_headers=["x-paseto"],
     )
 
     # инициализация Hawk для трекинга ошибок

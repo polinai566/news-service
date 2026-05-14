@@ -3,7 +3,7 @@ from sqlalchemy import select
 from fastapi import HTTPException, status
 from app.database import SessionDep, redis_client
 from .models import News
-from .schemas import NewsCreate, NewsUpdate, NewsRead
+from .schemas import NewsCreate, NewsUpdate, NewsRead, NewxIdResponse
 import app.celery as task
 from app.metrics import news_created_total
 from app.logging_config import get_logger
@@ -17,7 +17,7 @@ class NewsService:
         self.db = db
 
     # создание новости
-    async def create(self, payload: NewsCreate, user_id: int) -> News:
+    async def create(self, payload: NewsCreate, user_id: int) -> NewxIdResponse:
         new_news = News(**payload.model_dump(), author_id = user_id)
         self.db.add(new_news)
         await self.db.commit()
@@ -26,7 +26,7 @@ class NewsService:
         # инкремент метрики создания новости
         news_created_total.labels(author_id=str(user_id)).inc()
         task.send_notification_of_new_news(new_news.news_id)
-        return new_news
+        return {"news_id": new_news.news_id}
     
     # чтение списка новостей
     async def list(self) -> Sequence[NewsRead]:
@@ -63,14 +63,14 @@ class NewsService:
         return news_data
     
     # обновление новости
-    async def update(self, news_id: int, news: News, payload: NewsUpdate) -> News:
+    async def update(self, news_id: int, news: News, payload: NewsUpdate) -> NewxIdResponse:
         for field, value in payload.model_dump(exclude_unset=True).items():
             setattr(news, field, value)
         await self.db.commit()
         await self.db.refresh(news)
         await redis_client.delete(f"news_{news_id}")
         await redis_client.delete("news_list_all")
-        return news
+        return {"news_id": news_id}
         
     # удаление новости
     async def delete(self, news_id: int, news: News) -> str:

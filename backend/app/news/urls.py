@@ -1,15 +1,15 @@
 from fastapi import APIRouter, Depends
-from .schemas import NewsCreate, NewsRead, NewsUpdate
+from .schemas import NewsCreate, NewsRead, NewsUpdate, NewxIdResponse
 from .service import NewsService
 from .models import News
-from app.depends import author_or_admin, get_jwt_payload, same_news_author_or_admin
+from app.depends import author_or_admin, same_news_author_or_admin
 
 router = APIRouter(tags=["news"])
 
 async def news_service(service: NewsService = Depends()) -> NewsService:
     return service
 
-@router.post("/", response_model=NewsRead)
+@router.post("/", response_model=NewxIdResponse)
 async def create_news(payload: NewsCreate, service: NewsService = Depends(news_service), user_id = Depends(author_or_admin)):
     return await service.create(payload, user_id)
 
@@ -21,7 +21,7 @@ async def get_news(service: NewsService = Depends(news_service)):
 async def get_news_by_id(news_id: int, service: NewsService = Depends(news_service)):
     return await service.get(news_id)
 
-@router.put("/{news_id}", response_model=NewsRead)
+@router.put("/{news_id}", response_model=NewxIdResponse)
 async def update_news(news_id: int, payload: NewsUpdate, service: NewsService = Depends(news_service), news: News = Depends(same_news_author_or_admin)):
     return await service.update(news_id, news, payload)
 
