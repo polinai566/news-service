@@ -8,6 +8,7 @@ class SessionBase(BaseModel):
 class SessionCreate(SessionBase):
     refresh_token: str
     user_agent: str
+    user_role: str
     model_config = ConfigDict(from_attributes=True)
 
 class SessionRead(SessionBase):

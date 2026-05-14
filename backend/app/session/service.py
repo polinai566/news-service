@@ -44,6 +44,7 @@ class SessionService:
 
         new_session = { 
             "user_id": user.user_id,
+            "user_role": user.user_role,
             "user_agent": user_agent,
             "refresh_token": refresh_token,
             "refresh_token_expiretime": (datetime.now(timezone.utc)+timedelta(days=LIFETIME)).isoformat()
@@ -102,6 +103,7 @@ class SessionService:
         
         new_session = {
             "user_id": user.user_id,
+            "user_role": user.user_role,
             "user_agent": user_agent,
             "refresh_token": new_refresh_token,
             "refresh_token_expiretime": (datetime.now(timezone.utc)+timedelta(days=LIFETIME)).isoformat()
@@ -174,6 +176,7 @@ class SessionService:
         
         new_session = { 
             "user_id": user.user_id,
+            "user_role": user.user_role,
             "user_agent": user_agent,
             "refresh_token": refresh_token,
             "refresh_token_expiretime": (datetime.now(timezone.utc)+timedelta(days=LIFETIME)).isoformat()

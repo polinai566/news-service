@@ -8,7 +8,6 @@ import CreateNewsPage from './pages/CreateNewsPage/CreateNewsPage';
 import EditNewsPage from './pages/EditNewsPage/EditNewsPage';
 import UserProfilePage from './pages/UserProfilePage/UserProfilePage';
 import AdminUsersPage from './pages/AdminUsersPage/AdminUsersPage';
-import { decodeJWT } from './utils/jwtDecoder';
 import { authAPI } from './api/index';
 import './styles/App.css';
 
@@ -24,20 +23,13 @@ function App() {
 
 		if (token && storedUser) {
 			try {
-				// декодировка токена для получения актуальных данных
-                const decodedToken = decodeJWT(token);
-
-				if (decodedToken && decodedToken.user_id) {
-                    // обновление данных пользователя из токена
-                    const userData = JSON.parse(storedUser);
-                    userData.user_id = parseInt(decodedToken.user_id);
-                    userData.user_role = decodedToken.user_role || userData.user_role || 'user';
-                    
+                const userData = JSON.parse(storedUser);
+				if (userData.user_id) {
                     console.log('Восстановление пользователя из localStorage:', userData);
                     setUser(userData);
                     setIsAuthenticated(true);
                 } else {
-                    console.log('Токен недействителен или поврежден');
+                    console.log('Данные пользователя некорректны');
                     handleLogout();
                 }
             } catch (error) {
@@ -50,12 +42,6 @@ function App() {
 		
 		// установка loading в false после проверки
 		setLoading(false);
-		
-		console.log('App.jsx: Проверка авторизации завершена', {
-            token: !!token,
-            hasUser: !!storedUser,
-            isAuthenticated
-        });
     }, []);
 
 	const handleLogout = async () => {

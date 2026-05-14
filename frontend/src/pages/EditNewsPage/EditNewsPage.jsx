@@ -32,16 +32,10 @@ function EditNewsPage() {
         try {
             const user = JSON.parse(userStr);
             setCurrentUser(user);
-            
-            // проверка роли из токена
-            const tokenParts = token.split('.');
-            if (tokenParts.length === 3) {
-                const payload = JSON.parse(atob(tokenParts[1]));
-                const userRole = payload.user_role;
-
-                if (!['admin', 'author'].includes(userRole)) {
-                    setHasPermission(false);
-                }
+            if (!['admin', 'author'].includes(user.user_role)) {
+                setHasPermission(false);
+                setLoadingNews(false);
+                return;
             }
         } catch (e) {
             console.error('Ошибка при проверке прав:', e);
@@ -80,7 +74,6 @@ function EditNewsPage() {
                 setLoadingNews(false);
             }
         };
-        
         fetchNews();
     }, [id]);
 

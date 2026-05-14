@@ -26,15 +26,9 @@ function CreateNewsPage() {
         try {
             const user = JSON.parse(userStr);
             setCurrentUser(user);
-            
-            const tokenParts = token.split('.');
-            if (tokenParts.length === 3) {
-                const payload = JSON.parse(atob(tokenParts[1]));
-                const userRole = payload.user_role;
-
-                if (!['admin', 'author'].includes(userRole)) {
-                    setHasPermission(false);
-                }
+            const userRole = user.user_role;
+            if (!['admin', 'author'].includes(userRole)) {
+                setHasPermission(false);
             }
         } catch (e) {
             console.error('Ошибка при проверке прав:', e);

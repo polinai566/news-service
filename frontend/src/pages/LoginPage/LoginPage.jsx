@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authAPI } from '../../api/index';
-import { decodeJWT } from '../../utils/jwtDecoder';
 import './LoginPage.css';
 
 function LoginPage({ setIsAuthenticated, setUser }) {
@@ -38,18 +37,13 @@ function LoginPage({ setIsAuthenticated, setUser }) {
     	  	  	throw new Error('Токен не получен от сервера');
     	  	}
 
-    	  	// сохранение jwt токена в localStorage
+    	  	// сохранение access токена в localStorage
     	  	localStorage.setItem('token', jwtToken);
 
-		  	// декодировка JWT токена для получения данных пользователя
-    	    const decodedToken = decodeJWT(jwtToken);
-
-			if (!decodedToken) {
-    	        throw new Error('Не удалось декодировать токен');
-    	    }
-
-    	    // сохранение jwt токена в localStorage
-    	    localStorage.setItem('token', jwtToken);
+            const sessionData = response.data;
+            if (!sessionData || !sessionData.user_id) {
+                throw new Error('Не удалось получить данные пользователя');
+            }
 
             // сохранение refresh токена и данных сессии
             if (response.data && response.data.refresh_token) {
@@ -57,60 +51,39 @@ function LoginPage({ setIsAuthenticated, setUser }) {
                 localStorage.setItem('session', JSON.stringify(response.data));
             }
 
-            // создание базового объекта пользователя из декодированного токена
-            const basicUserData = {
+            // создание объекта пользователя из данных, полученных от сервера
+            const UserData = {
+                user_id: sessionData.user_id,
+                user_role: sessionData.user_role,
                 email: email,
                 user_name: email.split('@')[0],
-                user_id: parseInt(decodedToken.user_id),
-                user_role: decodedToken.user_role || 'user'
             };
 		
 			// сохранение данных пользователя в localStorage
-            localStorage.setItem('user', JSON.stringify(basicUserData));
+            localStorage.setItem('user', JSON.stringify(UserData));
     
-            // обновление состояния в App.jsx
-            if (setIsAuthenticated) {
-                setIsAuthenticated(true);
-            }
-            if (setUser) {
-                setUser(basicUserData);
-            }
+            // обновление состояния в App
+            if (setIsAuthenticated) setIsAuthenticated(true);
+            if (setUser) setUser(UserData);
 
             // уведомление об успешном входе
-            console.log('Успешный вход!', basicUserData);
+            console.log('Успешный вход!', UserData);
             navigate('/');
 
     	} catch (err) {
             console.error('Ошибка авторизации:', err);
-            
             if (err.response) {
                 const status = err.response.status;
                 const data = err.response.data;
-                
                 switch (status) {
-                    case 400:
-                        setError('Некорректные данные');
-                        break;
-                    case 401:
-                        if (data && data.detail) {
-                            setError(data.detail);
-                        } else if (typeof data === 'string') {
-                            setError(data);
-                        } else {
-                            setError('Неверный email или пароль');
-                        }
-                        break;
-                    case 404:
-                        setError('Пользователь не найден');
-                        break;
-                    case 500:
-                        setError('Ошибка сервера. Попробуйте позже');
-                        break;
-                    default:
-                        setError(`Ошибка ${status}: ${data?.detail || 'Неизвестная ошибка'}`);
+                    case 400: setError('Некорректные данные'); break;
+                    case 401: setError(data?.detail || 'Неверный email или пароль'); break;
+                    case 404: setError('Пользователь не найден'); break;
+                    case 500: setError('Ошибка сервера'); break;
+                    default: setError(`Ошибка ${status}: ${data?.detail || 'Неизвестная ошибка'}`);
                 }
             } else if (err.request) {
-                setError('Не удалось подключиться к серверу. Проверьте подключение');
+                setError('Не удалось подключиться к серверу');
             } else {
                 setError(err.message || 'Произошла ошибка');
             }
