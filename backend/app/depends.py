@@ -1,6 +1,6 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from app.utils import check_jwt
+from app.utils import check_paseto_token
 from sqlalchemy import select
 from app.news.models import News
 from app.comment.models import Comment
@@ -9,10 +9,10 @@ from app.database import SessionDep
 oauth2 = OAuth2PasswordBearer(tokenUrl="/sessions/login")
 
 async def get_jwt_payload(jwt_token: str = Depends(oauth2)):
-    jwt_payload = check_jwt(jwt_token)
-    if not jwt_payload:
+    payload = check_paseto_token(jwt_token)
+    if not payload:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect access token")
-    return jwt_payload
+    return payload
 
 async def is_admin(jwt_payload: str = Depends(get_jwt_payload)):
     if jwt_payload["user_role"] != "admin":

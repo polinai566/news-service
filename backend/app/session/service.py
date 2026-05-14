@@ -5,7 +5,7 @@ from collections.abc import AsyncIterator
 from datetime import datetime, timezone, timedelta
 from dotenv import load_dotenv
 from app.database import SessionDep, redis_client
-from app.utils import check_password, create_jwt, generation_refresh_token, sso
+from app.utils import check_password, create_paseto_token, generation_refresh_token, sso
 from app.user.models import User
 from app.user.schemas import UserLogin
 from .schemas import SessionRefreshToken, SessionCreate, SessionAdminRead, SessionRead
@@ -35,8 +35,8 @@ class SessionService:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect password")
         
         # создание JWT токена
-        jwt_token = create_jwt(user.user_id, user.user_role) 
-        response.headers["x-jwt"] = str(jwt_token)
+        paseto_token = create_paseto_token(user.user_id, user.user_role) 
+        response.headers["x-jwt"] = paseto_token
         # извлечение user_agent из заголовка запроса
         user_agent = request.headers.get("User-Agent")
         # создание refresh токена
@@ -97,8 +97,8 @@ class SessionService:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Refresh token not linked to user")
         
         new_refresh_token = generation_refresh_token()
-        jwt_token = create_jwt(session["user_id"], user.user_role)
-        response.headers["x-jwt"] = str(jwt_token)
+        paseto_token = create_paseto_token(session["user_id"], user.user_role)
+        response.headers["x-jwt"] = paseto_token
         
         new_session = {
             "user_id": user.user_id,
@@ -167,8 +167,8 @@ class SessionService:
             await self.db.refresh(new_user)
             user = new_user
 
-        jwt_token = create_jwt(user.user_id, user.user_role)
-        response.headers["x-jwt"] = str(jwt_token)
+        paseto_token = create_paseto_token(user.user_id, user.user_role)
+        response.headers["x-jwt"] = paseto_token
         user_agent = request.headers.get("User-Agent")
         refresh_token = generation_refresh_token()
         
@@ -185,6 +185,6 @@ class SessionService:
 
         return JSONResponse({
             "message": "Authentication successful",
-            "jwt_token": jwt_token,
+            "access_token": paseto_token,
             "session": new_session
         })
