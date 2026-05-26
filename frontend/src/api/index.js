@@ -23,11 +23,11 @@ const processQueue = (error, token = null) => {
 
 // добавление токена к запросам, если он есть
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
 }, (error) => {
     return Promise.reject(error);
 });
@@ -64,7 +64,7 @@ api.interceptors.response.use(
 
             try {
                 // попытка обновить токен
-                const refreshResponse = await authAPI.refresh(refreshToken);
+                const refreshResponse = await api.put('/session/', { refresh_token: refreshToken });
                 const newJwtToken = refreshResponse.headers['x-paseto'];
                 const newRefreshToken = refreshResponse.data.refresh_token;
                 
@@ -101,8 +101,6 @@ api.interceptors.response.use(
 const logoutAndRedirect = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');
-    localStorage.removeItem('session');
-    localStorage.removeItem('user');
     localStorage.removeItem('userId');
     
     // если не на странице логина, перенаправление туда
@@ -158,6 +156,7 @@ export const userAPI = {
   updateUser: (userId, userData) => api.put(`/user/${userId}`, userData),
   // удаление пользователя (для админа)
   deleteUser: (userId) => api.delete(`/user/${userId}`),
+  getCurrentUser: () => api.get('/user/me'),
 };
 
 export const commentAPI = {

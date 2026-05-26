@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { userAPI } from '../../api/index';
+import { useAuth } from '../../context/AuthContext';
 import Avatar from '../../components/Avatar/Avatar';
 import './UserProfilePage.css';
 
 function UserProfilePage() {
     const { userId } = useParams();
     const navigate = useNavigate();
+    const { user: currentUser, isAuthenticated, logout, refreshUser } = useAuth();
     
-    const [user, setUser] = useState(null);
-    const [currentUser, setCurrentUser] = useState(null);
+    const [user, setUser] = useState(null);          // профиль, который смотрим (может быть чужим)
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [isEditing, setIsEditing] = useState(false);
@@ -25,19 +26,7 @@ function UserProfilePage() {
         password: ''
     });
 
-    // получение текущего пользователя из localStorage
-    useEffect(() => {
-        const userStr = localStorage.getItem('user');
-        if (userStr) {
-            try {
-                setCurrentUser(JSON.parse(userStr));
-            } catch (e) {
-                console.error('Ошибка при чтении пользователя из localStorage:', e);
-            }
-        }
-    }, []);
-
-    // загрузка данных пользователя
+    // загрузка данных пользователя (своего или чужого)
     useEffect(() => {
         const fetchUser = async () => {
             try {
@@ -49,23 +38,15 @@ function UserProfilePage() {
                 if (userId) {
                     targetUserId = parseInt(userId);
                 } else {
-                    const userStr = localStorage.getItem('user');
-                    if (userStr) {
-                        try {
-                            const parsedUser = JSON.parse(userStr);
-                            targetUserId = parsedUser.user_id;
-                        } catch (e) {
-                            console.error('Ошибка при чтении пользователя:', e);
-                        }
+                    // свой профиль – берём ID из контекста
+                    if (!currentUser) {
+                        setLoading(false);
+                        navigate('/login');
+                        return;
                     }
+                    targetUserId = currentUser.user_id;
                 }
                 
-                if (!targetUserId) {
-                    setLoading(false);
-                    navigate('/login');
-                    return;
-                }
-
                 const response = await userAPI.getUserById(targetUserId);
                 const userData = response.data;
                 setUser(userData);
@@ -83,8 +64,7 @@ function UserProfilePage() {
                 
                 if (err.response?.status === 401) {
                     setError('Сессия истекла. Пожалуйста, войдите снова.');
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('user');
+                    logout();
                     setTimeout(() => navigate('/login'), 2000);
                 } else if (err.response?.status === 403) {
                     setError('У вас нет прав для просмотра этого профиля');
@@ -98,8 +78,12 @@ function UserProfilePage() {
             }
         };
 
+        if (!isAuthenticated && !userId) {
+            navigate('/login');
+            return;
+        }
         fetchUser();
-    }, [userId, navigate]);
+    }, [userId, currentUser, isAuthenticated, navigate, logout]);
 
     const canEdit = currentUser && user && (
         currentUser.user_id === user.user_id || 
@@ -170,20 +154,18 @@ function UserProfilePage() {
                 password: updateData.password ? '***' : 'не указан' 
             });
 
-            const response = await userAPI.updateUser(user.user_id, updateData);
+            await userAPI.updateUser(user.user_id, updateData);
             
-            // обновление данных пользователя
-            setUser(response.data);
-            
-            if (currentUser?.user_id === user.user_id) {
-                const updatedUser = {
-                    ...currentUser,
-                    user_name: response.data.user_name,
-                    email: response.data.email,
-                    user_role: response.data.user_role,
-                    avatar: response.data.avatar
-                };
-                localStorage.setItem('user', JSON.stringify(updatedUser));
+            // если обновили свой профиль – обновляем контекст (и заодно данные на странице)
+            if (isOwnProfile) {
+                await refreshUser();
+                // также обновляем локального user, чтобы отобразить изменения сразу
+                const refreshedResponse = await userAPI.getUserById(user.user_id);
+                setUser(refreshedResponse.data);
+            } else {
+                // если админ меняет чужой профиль – просто обновляем локального user
+                const updatedResponse = await userAPI.getUserById(user.user_id);
+                setUser(updatedResponse.data);
             }
             
             alert('Профиль успешно обновлен!');
@@ -194,8 +176,7 @@ function UserProfilePage() {
             
             if (err.response?.status === 401) {
                 setError('Сессия истекла. Пожалуйста, войдите снова.');
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
+                logout();
                 setTimeout(() => navigate('/login'), 2000);
             } else if (err.response?.status === 403) {
                 setError('У вас нет прав для редактирования этого профиля');
@@ -275,12 +256,7 @@ function UserProfilePage() {
             
             // если удаляем свой аккаунт
             if (isOwnProfile) {
-                localStorage.removeItem('token');
-                localStorage.removeItem('refreshToken');
-                localStorage.removeItem('session');
-                localStorage.removeItem('user');
-                localStorage.removeItem('userId');
-                
+                logout(); // чистим токены и контекст
                 alert('Ваш аккаунт был успешно удален. Спасибо, что были с нами!');
                 navigate('/');
             } else {
@@ -292,8 +268,7 @@ function UserProfilePage() {
             
             if (err.response?.status === 401) {
                 setError('Сессия истекла. Пожалуйста, войдите снова.');
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
+                logout();
                 setTimeout(() => navigate('/login'), 2000);
             } else if (err.response?.status === 403) {
                 setError('У вас нет прав для удаления этого аккаунта');

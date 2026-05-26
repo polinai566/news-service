@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends
+from .models import User
 from .schemas import UserCreate, UserRead, UserUpdate, UserIdResponse
 from .service import UserService
-from app.depends import is_admin, same_user_or_admin
+from app.depends import is_admin, same_user_or_admin, get_current_user
 
 router = APIRouter(tags=["users"])
 
@@ -27,3 +28,7 @@ async def update_user(user_id: int, payload: UserUpdate, service: UserService = 
 @router.delete("/{user_id}", response_model=str)
 async def delete_user(user_id: int, service: UserService = Depends(user_service), _ = Depends(same_user_or_admin)):
     return await service.delete(user_id)
+
+@router.get("/me", response_model=UserRead)
+async def get_current_user_info(current_user: User = Depends(get_current_user)):
+    return current_user

@@ -5,6 +5,7 @@ from sqlalchemy import select
 from app.news.models import News
 from app.comment.models import Comment
 from app.database import SessionDep
+from app.user.service import UserService
 
 oauth2 = OAuth2PasswordBearer(tokenUrl="/sessions/login")
 
@@ -48,3 +49,11 @@ async def same_comment_author_or_admin(comment_id: int, db: SessionDep, paseto_p
     if paseto_payload["user_role"] != "admin" and int(paseto_payload["user_id"]) != comment.author_id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied")
     return comment
+
+async def get_current_user(db: SessionDep, payload: dict = Depends(get_paseto_payload)):
+    user_id = payload.get("user_id")
+    if not user_id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token payload")
+    user_service = UserService(db)
+    user = await user_service.get(user_id)
+    return user

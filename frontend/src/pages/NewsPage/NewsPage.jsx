@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { newsAPI, commentAPI } from '../../api/index';
+import { useAuth } from '../../context/AuthContext';
 import NewsCard from '../../components/NewsCard/NewsCard';
 import CommentCard from '../../components/CommentCard/CommentCard';
 import CommentForm from '../../components/CommentForm/CommentForm';
@@ -10,24 +11,13 @@ import './NewsPage.css';
 function NewsPage() {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { user: currentUser, isAuthenticated, logout } = useAuth();
+
     const [news, setNews] = useState(null);
     const [comments, setComments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [commentLoading, setCommentLoading] = useState(false);
     const [error, setError] = useState(null);
-    const [currentUser, setCurrentUser] = useState(null);
-
-    // получение текущего пользователя из localStorage
-    useEffect(() => {
-        const userStr = localStorage.getItem('user');
-        if (userStr) {
-            try {
-                setCurrentUser(JSON.parse(userStr));
-            } catch (e) {
-                console.error('Ошибка при чтении пользователя из localStorage:', e);
-            }
-        }
-    }, []);
 
     // загрузка новости и комментариев
     useEffect(() => {
@@ -44,11 +34,10 @@ function NewsPage() {
                     console.warn('Не удалось загрузить комментарии:', commentErr);
                     setComments([]);
                 }
-                
-                setLoading(false);
             } catch (err) {
                 console.error('Ошибка загрузки новости:', err);
                 setError('Не удалось загрузить новость');
+            } finally {
                 setLoading(false);
             }
         };
@@ -76,9 +65,7 @@ function NewsPage() {
             console.error('Ошибка при создании комментария:', err);
             
             if (err.response?.status === 401) {
-                // токен недействителен, перенаправляем на логин
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
+                logout();
                 navigate('/login');
                 alert('Сессия истекла. Пожалуйста, войдите снова.');
             } else {
@@ -105,8 +92,7 @@ function NewsPage() {
             console.error('Ошибка при редактировании комментария:', err);
             
             if (err.response?.status === 401) {
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
+                logout()
                 navigate('/login');
                 alert('Сессия истекла. Пожалуйста, войдите снова.');
             } else if (err.response?.status === 403) {
@@ -129,8 +115,7 @@ function NewsPage() {
             console.error('Ошибка при удалении комментария:', err);
             
             if (err.response?.status === 401) {
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
+                logout()
                 navigate('/login');
                 alert('Сессия истекла. Пожалуйста, войдите снова.');
             } else if (err.response?.status === 403) {
@@ -155,8 +140,7 @@ function NewsPage() {
             console.error('Ошибка при удалении новости:', err);
             
             if (err.response?.status === 401) {
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
+                logout()
                 navigate('/login');
                 alert('Сессия истекла. Пожалуйста, войдите снова.');
             } else if (err.response?.status === 403) {

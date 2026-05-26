@@ -3,11 +3,13 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { newsAPI } from '../../api/index';
 import { convertEditorJsToText } from '../../utils/convertEditorJsToText';
 import { convertTextToEditorJs } from '../../utils/convertTextToEditorJs';
+import { useAuth } from '../../context/AuthContext';
 import './EditNewsPage.css';
 
 function EditNewsPage() {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { user: currentUser, isAuthenticated, logout } = useAuth();
     
     const [header, setHeader] = useState('');
     const [content, setContent] = useState('');
@@ -15,31 +17,19 @@ function EditNewsPage() {
     const [loading, setLoading] = useState(false);
     const [loadingNews, setLoadingNews] = useState(true);
     const [error, setError] = useState('');
-    const [currentUser, setCurrentUser] = useState(null);
     const [hasPermission, setHasPermission] = useState(true);
-    const [originalNews, setOriginalNews] = useState(null);
 
     useEffect(() => {
-        const userStr = localStorage.getItem('user');
-        const token = localStorage.getItem('token');
-        
-        if (!userStr || !token) {
+        if (!isAuthenticated || !currentUser) {
             setHasPermission(false);
             setLoadingNews(false);
             return;
         }
 
-        try {
-            const user = JSON.parse(userStr);
-            setCurrentUser(user);
-            if (!['admin', 'author'].includes(user.user_role)) {
-                setHasPermission(false);
-                setLoadingNews(false);
-                return;
-            }
-        } catch (e) {
-            console.error('Ошибка при проверке прав:', e);
+        if (!['admin', 'author'].includes(currentUser.user_role)) {
             setHasPermission(false);
+            setLoadingNews(false);
+            return;
         }
         
         // загрузка новости
@@ -50,10 +40,7 @@ function EditNewsPage() {
                 setOriginalNews(news);
                 
                 // проверка, является ли пользователь автором или админом
-                const userStr = localStorage.getItem('user');
-                const user = userStr ? JSON.parse(userStr) : null;
-                
-                if (!user || (user.user_role !== 'admin' && user.user_id !== news.author_id)) {
+                if (currentUser.user_role !== 'admin' && currentUser.user_id !== news.author_id) {
                     setHasPermission(false);
                     setLoadingNews(false);
                     return;
@@ -65,7 +52,6 @@ function EditNewsPage() {
                 // конвертация Editor.js контента в текст
                 const textContent = convertEditorJsToText(news.content);
                 setContent(textContent);
-                
                 setCover(news.cover || '');
                 setLoadingNews(false);
             } catch (err) {
@@ -75,7 +61,7 @@ function EditNewsPage() {
             }
         };
         fetchNews();
-    }, [id]);
+    }, [id, currentUser, isAuthenticated]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -110,8 +96,7 @@ function EditNewsPage() {
             
             if (err.response?.status === 401) {
                 setError('Сессия истекла. Пожалуйста, войдите снова.');
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
+                logout();
                 setTimeout(() => navigate('/login'), 2000);
             } else if (err.response?.status === 403) {
                 setError('У вас нет прав для редактирования этой новости');

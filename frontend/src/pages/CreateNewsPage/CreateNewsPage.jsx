@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { newsAPI } from '../../api/index';
-import { convertTextToEditorJs } from '../../utils/convertTextToEditorJs'
+import { convertTextToEditorJs } from '../../utils/convertTextToEditorJs';
 import './CreateNewsPage.css';
+import { useAuth } from '../../context/AuthContext';
 
 function CreateNewsPage() {
+    const { user, isAuthenticated } = useAuth();
+
     const [header, setHeader] = useState('');
     const [content, setContent] = useState('');
     const [cover, setCover] = useState('');
@@ -15,26 +18,18 @@ function CreateNewsPage() {
     const navigate = useNavigate();
 
     useEffect(() => {
-        const userStr = localStorage.getItem('user');
-        const token = localStorage.getItem('token');
-        
-        if (!userStr || !token) {
-            setHasPermission(false);
-            return;
-        }
-
         try {
-            const user = JSON.parse(userStr);
-            setCurrentUser(user);
             const userRole = user.user_role;
-            if (!['admin', 'author'].includes(userRole)) {
+            if (!isAuthenticated || !user || !['admin', 'author'].includes(userRole)) {
                 setHasPermission(false);
+            } else {
+                setHasPermission(true);
             }
         } catch (e) {
             console.error('Ошибка при проверке прав:', e);
             setHasPermission(false);
         }
-    }, []);
+    }, [user, isAuthenticated]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -69,8 +64,7 @@ function CreateNewsPage() {
             
             if (err.response?.status === 401) {
                 setError('Сессия истекла. Пожалуйста, войдите снова.');
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
+                logout();
                 setTimeout(() => navigate('/login'), 2000);
             } else if (err.response?.status === 403) {
                 setError('У вас нет прав для создания новостей');

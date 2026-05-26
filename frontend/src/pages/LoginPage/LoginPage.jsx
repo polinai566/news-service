@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authAPI } from '../../api/index';
+import { useAuth } from '../../context/AuthContext';
 import './LoginPage.css';
 
-function LoginPage({ setIsAuthenticated, setUser }) {
+function LoginPage() {
+    const { login } = useAuth();
+
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
 	const [loading, setLoading] = useState(false);
@@ -32,6 +35,7 @@ function LoginPage({ setIsAuthenticated, setUser }) {
 
     	  	// получение PASETO токена из заголовка
     	  	const paseto_token = response.headers['x-paseto'];
+            const refreshToken = response.data.refresh_token;
 
     	  	if (!paseto_token) {
     	  	  	throw new Error('Токен не получен от сервера');
@@ -45,29 +49,22 @@ function LoginPage({ setIsAuthenticated, setUser }) {
                 throw new Error('Не удалось получить данные пользователя');
             }
 
-            // сохранение refresh токена и данных сессии
-            if (response.data && response.data.refresh_token) {
-                localStorage.setItem('refreshToken', response.data.refresh_token);
-                localStorage.setItem('session', JSON.stringify(response.data));
-            }
+            // сохранение refresh токена ив localStorage
+            localStorage.setItem('refreshToken', refreshToken);
 
             // создание объекта пользователя из данных, полученных от сервера
-            const UserData = {
+            const userData = {
                 user_id: sessionData.user_id,
                 user_role: sessionData.user_role,
                 email: email,
                 user_name: email.split('@')[0],
             };
 		
-			// сохранение данных пользователя в localStorage
-            localStorage.setItem('user', JSON.stringify(UserData));
-    
-            // обновление состояния в App
-            if (setIsAuthenticated) setIsAuthenticated(true);
-            if (setUser) setUser(UserData);
+            // обновление контекста
+            login(paseto_token, refreshToken, userData);
 
             // уведомление об успешном входе
-            console.log('Успешный вход!', UserData);
+            console.log('Успешный вход!', userData);
             navigate('/');
 
     	} catch (err) {
