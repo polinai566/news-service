@@ -102,8 +102,6 @@ function AdminUsersPage() {
                                         <Link 
                                             to={`/profile/${u.user_id}`}
                                             className="admin-profile-btn"
-                                            target="_blank"
-                                            rel="noopener noreferrer"
                                         >
                                             👤 Профиль
                                         </Link>

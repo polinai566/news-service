@@ -37,7 +37,6 @@
     LOGSTASH_HOST="localhost"
     LOGSTASH_PORT="5000"
     HAWK_DSN="your-integration-token"
-    PASETO_SECRET_KEY="my-strong-secret-key"
     
     Для получения Client ID, Client Secret и Client Redirect:
 
@@ -53,7 +52,7 @@
 3. Запустить backend, frontend и прочие приложения при помощи файла docker-compose.yaml
 
     ```bash
-    docker-compose up
+    docker compose up
     ```
 
 ## Описание и использование ручек
