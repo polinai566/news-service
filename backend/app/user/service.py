@@ -18,7 +18,10 @@ class UserService:
         if existing_user.scalar_one_or_none():
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
         payload.password = hash_password(payload.password)
-        new_user = User(**payload.model_dump())
+        new_user = User(
+            **payload.model_dump(),
+            user_role="user",
+        )
         self.db.add(new_user)
         await self.db.commit()
         await self.db.refresh(new_user)

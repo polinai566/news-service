@@ -108,3 +108,30 @@ async def test_registration_rejects_invalid_payload(
     error_fields = {error["loc"][-1] for error in errors}
 
     assert expected_field in error_fields
+
+@pytest.mark.integration
+async def test_register_user_cannot_assign_admin_role(
+    db_client: AsyncClient,
+    db_session: AsyncSession,
+) -> None:
+    """Check that a user cannot assign the admin role during registration."""
+
+    payload = {
+        "user_name": "test_user",
+        "email": "test_user@example.com",
+        "password": "test_password",
+        "user_role": "admin",
+    }
+
+    response = await db_client.post("/user/", json=payload)
+
+    assert response.status_code == 200
+
+    user_id = response.json()["user_id"]
+
+    result = await db_session.execute(
+        select(User).where(User.user_id == user_id)
+    )
+    user = result.scalar_one()
+
+    assert user.user_role == "user"

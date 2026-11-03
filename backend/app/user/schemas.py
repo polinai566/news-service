@@ -9,8 +9,11 @@ class UserBase(BaseModel):
     avatar: Optional[str] = None
     password: Optional[str] = None
 
-class UserCreate(UserBase):
-    pass
+class UserCreate(BaseModel):
+    user_name: str
+    email: EmailStr
+    password: str
+    avatar: Optional[str] = None
 
 class UserUpdate(UserBase):
     pass
