@@ -15,9 +15,14 @@ class UserCreate(UserBase):
 class UserUpdate(UserBase):
     pass
 
-class UserRead(UserBase):
+class UserRead(BaseModel):
     user_id: int
+    user_name: str
+    email: EmailStr
+    user_role: str
+    avatar: Optional[str] = None
     registration_date: datetime
+
     model_config = ConfigDict(from_attributes=True)
 
 class UserLogin(BaseModel):
