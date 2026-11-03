@@ -154,7 +154,12 @@ function UserProfilePage() {
                 password: updateData.password ? '***' : 'не указан' 
             });
 
-            await userAPI.updateUser(user.user_id, updateData);
+            if (canChangeRole) {
+                await userAPI.adminUpdateUser(user.user_id, updateData);
+            } else {
+                const { user_role, ...payloadForRegularUpdate } = updateData;
+                await userAPI.updateUser(user.user_id, payloadForRegularUpdate);
+            }
             
             // если обновили свой профиль – обновляем контекст (и заодно данные на странице)
             if (isOwnProfile) {

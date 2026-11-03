@@ -86,3 +86,38 @@ async def test_admin_cannot_see_password_hash_in_users_list(
 
     assert len(users) == 2
     assert all("password" not in user for user in users)
+
+@pytest.mark.integration
+async def test_user_cannot_assign_admin_role_to_own_profile(
+    db_client: AsyncClient,
+    db_session: AsyncSession,
+    create_user,
+    authorization_headers,
+) -> None:
+    """Check that a user cannot assign the admin role to their own profile."""
+
+    user = await create_user(
+        email="role_update@example.com",
+    )
+
+    headers = authorization_headers(
+        user_id=user.user_id,
+    )
+
+    payload = {
+        "user_name": user.user_name,
+        "email": user.email,
+        "user_role": "admin",
+    }
+
+    response = await db_client.put(
+        f"/user/{user.user_id}",
+        json=payload,
+        headers=headers,
+    )
+
+    assert response.status_code == 200
+
+    await db_session.refresh(user)
+
+    assert user.user_role == "user"

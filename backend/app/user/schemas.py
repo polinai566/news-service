@@ -1,11 +1,10 @@
 from pydantic import BaseModel, ConfigDict, EmailStr
 from datetime import datetime
-from typing import Optional
+from typing import Literal, Optional
 
 class UserBase(BaseModel):
     user_name: str
     email: EmailStr
-    user_role: str = "user"
     avatar: Optional[str] = None
     password: Optional[str] = None
 
@@ -17,6 +16,9 @@ class UserCreate(BaseModel):
 
 class UserUpdate(UserBase):
     pass
+
+class UserAdminUpdate(UserBase):
+    user_role: Literal["user", "author", "admin"] = "user"
 
 class UserRead(BaseModel):
     user_id: int

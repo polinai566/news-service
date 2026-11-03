@@ -1,3 +1,4 @@
+import sys
 import os
 import subprocess
 from collections.abc import AsyncIterator, Iterator
@@ -13,13 +14,20 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
 )
+from redis.asyncio import Redis
 from testcontainers.community.postgres import PostgresContainer
+from testcontainers.redis import RedisContainer
 
 
 @pytest.fixture(scope="session")
 def postgres_container() -> Iterator[PostgresContainer]:
     """Start one PostgreSQL container for the entire test session."""
     with PostgresContainer("postgres:17") as container:
+        yield container
+
+@pytest.fixture(scope="session")
+def redis_container() -> Iterator[RedisContainer]:
+    with RedisContainer("redis:7-alpine") as container:
         yield container
 
 @pytest.fixture(scope="session")
@@ -40,8 +48,6 @@ def migrated_postgres_url(
             "POSTGRES_HOST": parsed_url.host or "",
             "POSTGRES_DB": parsed_url.database or "",
             "POSTGRES_PORT": str(parsed_url.port or ""),
-            "REDIS_HOST": "127.0.0.1",
-            "REDIS_PORT": "6379",
         }
     )
 
@@ -91,8 +97,6 @@ def app_environment(
         "POSTGRES_HOST": database_url.host or "",
         "POSTGRES_DB": database_url.database or "",
         "POSTGRES_PORT": str(database_url.port or ""),
-        "REDIS_HOST": "127.0.0.1",
-        "REDIS_PORT": "6379",
         "HAWK_DSN": "",
     }
 
@@ -111,6 +115,36 @@ def app_environment(
                 os.environ.pop(key, None)
             else:
                 os.environ[key] = value
+
+@pytest.fixture(scope="session", autouse=True)
+def patched_redis(
+    redis_container: RedisContainer,
+    app_environment,
+) -> Iterator[Redis]:
+    """Replace every module-level redis_client with a client pointing at the test container."""
+
+    import app.database
+
+    client = Redis(
+        host=redis_container.get_container_host_ip(),
+        port=redis_container.get_exposed_port(6379),
+        decode_responses=True
+    )
+
+    original = app.database.redis_client
+    patched: list = []
+    for name, module in list(sys.modules.items()):
+        if not name.startswith("app.") or module is None:
+            continue
+        if getattr(module, "redis_client", None) is original:
+            module.redis_client = client
+            patched.append(module)
+
+    try:
+        yield client
+    finally:
+        for module in patched:
+            module.redis_client = original
 
 @pytest.fixture
 async def db_connection(

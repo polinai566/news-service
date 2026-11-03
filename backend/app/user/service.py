@@ -3,7 +3,7 @@ from sqlalchemy import select
 from fastapi import HTTPException, status
 from app.database import SessionDep, redis_client
 from .models import User
-from .schemas import UserCreate, UserUpdate, UserIdResponse
+from .schemas import UserCreate, UserUpdate, UserAdminUpdate, UserIdResponse
 from app.utils import hash_password
 from app.metrics import users_registered_total
 
@@ -46,7 +46,7 @@ class UserService:
         return user
 
     # обновление пользователя
-    async def update(self, user_id: int, payload: UserUpdate) -> UserIdResponse:
+    async def update(self, user_id: int, payload: UserUpdate | UserAdminUpdate) -> UserIdResponse:
         user = await self.db.execute(select(User).where(User.user_id == user_id))
         user = user.scalar_one_or_none()
         if not user:

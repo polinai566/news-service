@@ -154,6 +154,8 @@ export const userAPI = {
   getAllUsers: () => api.get('/user/'),
   // обновление пользователя
   updateUser: (userId, userData) => api.put(`/user/${userId}`, userData),
+  // обновление пользователя (для админа)
+  adminUpdateUser: (userId, userData) => api.put(`/user/admin/${userId}`, userData),
   // удаление пользователя (для админа)
   deleteUser: (userId) => api.delete(`/user/${userId}`),
   getCurrentUser: () => api.get('/user/me'),
