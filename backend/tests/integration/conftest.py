@@ -16,7 +16,7 @@ from sqlalchemy.ext.asyncio import (
 )
 from redis.asyncio import Redis
 from testcontainers.community.postgres import PostgresContainer
-from testcontainers.redis import RedisContainer
+from testcontainers.community.redis import RedisContainer
 
 
 @pytest.fixture(scope="session")
@@ -116,26 +116,31 @@ def app_environment(
             else:
                 os.environ[key] = value
 
-@pytest.fixture(scope="session", autouse=True)
-def patched_redis(
+@pytest.fixture(autouse=True)
+async def patched_redis(
     redis_container: RedisContainer,
     app_environment,
-) -> Iterator[Redis]:
-    """Replace every module-level redis_client with a client pointing at the test container."""
+) -> AsyncIterator[Redis]:
+    """Replace application Redis clients with a client connected to the test container."""
 
     import app.database
+    import app.user.service
+    import app.session.service
+
+    original = app.database.redis_client
 
     client = Redis(
         host=redis_container.get_container_host_ip(),
         port=redis_container.get_exposed_port(6379),
-        decode_responses=True
+        decode_responses=True,
     )
 
-    original = app.database.redis_client
     patched: list = []
+
     for name, module in list(sys.modules.items()):
         if not name.startswith("app.") or module is None:
             continue
+
         if getattr(module, "redis_client", None) is original:
             module.redis_client = client
             patched.append(module)
@@ -145,6 +150,8 @@ def patched_redis(
     finally:
         for module in patched:
             module.redis_client = original
+
+        await client.aclose()
 
 @pytest.fixture
 async def db_connection(

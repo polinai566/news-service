@@ -21,12 +21,12 @@ async def get_users(service: UserService = Depends(user_service), _ = Depends(is
 async def get_user_by_id(user_id: int, service: UserService = Depends(user_service), _ = Depends(same_user_or_admin)):
     return await service.get(user_id)
 
-@router.put("/{user_id}", response_model=UserIdResponse)
-async def update_user(user_id: int, payload: UserUpdate, service: UserService = Depends(user_service), _ = Depends(same_user_or_admin)):
-    return await service.update(user_id, payload)
-
 @router.put("/admin/{user_id}", response_model=UserIdResponse)
 async def admin_update_user(user_id: int, payload: UserAdminUpdate, service: UserService = Depends(user_service), _ = Depends(is_admin)):
+    return await service.update(user_id, payload)
+
+@router.put("/{user_id}", response_model=UserIdResponse)
+async def update_user(user_id: int, payload: UserUpdate, service: UserService = Depends(user_service), _ = Depends(same_user_or_admin)):
     return await service.update(user_id, payload)
 
 @router.delete("/{user_id}", response_model=str)
