@@ -33,7 +33,7 @@ class NewsService:
         cached_news_list = await redis_client.get("news_list_all")
         if cached_news_list:
             news_list_data = json.loads(cached_news_list)
-            logger.info("news_list_from_cache", source="cache")
+            logger.debug("news_list_from_cache", source="cache")
             return [NewsRead.model_validate(news_data) for news_data in news_list_data]
         news = await self.db.execute(select(News))
         news_list = news.scalars().all()
@@ -41,7 +41,7 @@ class NewsService:
         news_list_data = [news_data.model_dump(mode='json') for news_data in news_data_list]
         news_list_json = json.dumps(news_list_data)
         await redis_client.setex("news_list_all", 300, news_list_json) # TTL 5 минут = 300 секунд
-        logger.info("news_list_from_database", source="database", count=len(news_data_list))
+        logger.debug("news_list_from_database", source="database", count=len(news_data_list))
         return news_data_list
     
     # чтение новости по индексу

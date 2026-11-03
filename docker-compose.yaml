@@ -47,9 +47,11 @@ services:
       REDIS_PORT: "6379"
     ports:
       - "${PORT:-8000}:8000"
+    volumes:
+      - ./backend/metrics:/app/metrics
     command: >
       sh -c "alembic upgrade head &&
-             uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"
+      uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --no-access-log"
 
   frontend:
     container_name: frontend
