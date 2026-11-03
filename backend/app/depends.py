@@ -7,7 +7,7 @@ from app.comment.models import Comment
 from app.database import SessionDep
 from app.user.service import UserService
 
-oauth2 = OAuth2PasswordBearer(tokenUrl="/sessions/login")
+oauth2 = OAuth2PasswordBearer(tokenUrl="/session/login")
 
 async def get_paseto_payload(paseto_token: str = Depends(oauth2)):
     payload = check_paseto_token(paseto_token)
