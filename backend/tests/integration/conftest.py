@@ -77,6 +77,41 @@ def migrated_postgres_url(
 
     return database_url
 
+@pytest.fixture(scope="session")
+def app_environment(
+    migrated_postgres_url: str,
+) -> Iterator[None]:
+    """Set test environment variables before importing the application."""
+
+    database_url = make_url(migrated_postgres_url)
+
+    test_variables = {
+        "POSTGRES_USER": database_url.username or "",
+        "POSTGRES_PASSWORD": database_url.password or "",
+        "POSTGRES_HOST": database_url.host or "",
+        "POSTGRES_DB": database_url.database or "",
+        "POSTGRES_PORT": str(database_url.port or ""),
+        "REDIS_HOST": "127.0.0.1",
+        "REDIS_PORT": "6379",
+        "HAWK_DSN": "",
+    }
+
+    original_variables = {
+        key: os.environ.get(key)
+        for key in test_variables
+    }
+
+    os.environ.update(test_variables)
+
+    try:
+        yield
+    finally:
+        for key, value in original_variables.items():
+            if value is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = value
+
 @pytest.fixture
 async def db_connection(
     migrated_postgres_url: str,
@@ -119,29 +154,55 @@ async def db_session(
         yield session
 
 @pytest.fixture
-def app() -> Iterator[FastAPI]:
-    """Provide the FastAPI application with isolated dependency overrides."""
-    from app.main import app as application
+def app(app_environment) -> Iterator[FastAPI]:
+    """Create a fresh FastAPI application instance for one test."""
 
-    original_dependency_overrides = (
-        application.dependency_overrides.copy()
+    from app.main import create_app
+
+    application = create_app()
+
+    yield application
+
+@pytest.fixture
+def db_app(
+    app: FastAPI,
+    db_session: AsyncSession,
+) -> Iterator[FastAPI]:
+    """Override the application's database dependency with a test session."""
+
+    from app.database import get_db_session
+
+    async def override_get_db_session() -> AsyncIterator[AsyncSession]:
+        yield db_session
+
+    app.dependency_overrides[get_db_session] = (
+        override_get_db_session
     )
 
-    application.dependency_overrides.clear()
-
     try:
-        yield application
+        yield app
     finally:
-        application.dependency_overrides.clear()
-        application.dependency_overrides.update(
-            original_dependency_overrides
-        )
+        app.dependency_overrides.clear()
 
 
 @pytest.fixture
 async def client(app: FastAPI) -> AsyncIterator[AsyncClient]:
     """Provide an asynchronous HTTP client for API tests."""
     transport = ASGITransport(app=app)
+
+    async with AsyncClient(
+        transport=transport,
+        base_url="http://test",
+    ) as test_client:
+        yield test_client
+
+@pytest.fixture
+async def db_client(
+    db_app: FastAPI,
+) -> AsyncIterator[AsyncClient]:
+    """Provide an HTTP client connected to the test database session."""
+
+    transport = ASGITransport(app=db_app)
 
     async with AsyncClient(
         transport=transport,
