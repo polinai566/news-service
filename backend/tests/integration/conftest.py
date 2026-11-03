@@ -7,6 +7,12 @@ from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import make_url
+from sqlalchemy.ext.asyncio import (
+    AsyncConnection,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 from testcontainers.community.postgres import PostgresContainer
 
 
@@ -70,6 +76,47 @@ def migrated_postgres_url(
         engine.dispose()
 
     return database_url
+
+@pytest.fixture
+async def db_connection(
+    migrated_postgres_url: str,
+) -> AsyncIterator[AsyncConnection]:
+    """Provide a connection with an outer transaction for one test."""
+
+    async_database_url = make_url(
+        migrated_postgres_url
+    ).set(drivername="postgresql+asyncpg")
+
+    engine = create_async_engine(async_database_url)
+
+    try:
+        async with engine.connect() as connection:
+            transaction = await connection.begin()
+
+            try:
+                yield connection
+            finally:
+                if transaction.is_active:
+                    await transaction.rollback()
+
+    finally:
+        await engine.dispose()
+
+
+@pytest.fixture
+async def db_session(
+    db_connection: AsyncConnection,
+) -> AsyncIterator[AsyncSession]:
+    """Provide an isolated async SQLAlchemy session for one test."""
+
+    session_factory = async_sessionmaker(
+        bind=db_connection,
+        expire_on_commit=False,
+        join_transaction_mode="create_savepoint",
+    )
+
+    async with session_factory() as session:
+        yield session
 
 @pytest.fixture
 def app() -> Iterator[FastAPI]:
