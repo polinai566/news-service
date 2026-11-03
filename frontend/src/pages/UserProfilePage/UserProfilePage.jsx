@@ -28,44 +28,46 @@ function UserProfilePage() {
 
     // загрузка данных пользователя (своего или чужого)
     useEffect(() => {
+        if (!isAuthenticated) {
+            navigate('/login');
+            return;
+        }
+
+        let cancelled = false;
+
         const fetchUser = async () => {
             try {
                 setLoading(true);
                 setError('');
-                
-                let targetUserId;
-                
-                if (userId) {
-                    targetUserId = parseInt(userId);
-                } else {
-                    // свой профиль – берём ID из контекста
-                    if (!currentUser) {
-                        setLoading(false);
-                        navigate('/login');
-                        return;
-                    }
-                    targetUserId = currentUser.user_id;
+
+                const targetUserId = userId
+                    ? parseInt(userId, 10)
+                    : currentUser?.user_id;
+
+                if (!targetUserId) {
+                    navigate('/login');
+                    return;
                 }
-                
+
                 const response = await userAPI.getUserById(targetUserId);
+                if (cancelled) return;
+
                 const userData = response.data;
                 setUser(userData);
-                
-                // заполнение формы данными пользователя
                 setFormData({
                     user_name: userData.user_name || '',
                     email: userData.email || '',
                     user_role: userData.user_role || 'user',
                     avatar: userData.avatar || '',
-                    password: ''
+                    password: '',
                 });
             } catch (err) {
+                if (cancelled) return;
                 console.error('Ошибка загрузки пользователя:', err);
-                
+
                 if (err.response?.status === 401) {
                     setError('Сессия истекла. Пожалуйста, войдите снова.');
-                    logout();
-                    setTimeout(() => navigate('/login'), 2000);
+                    logout(); 
                 } else if (err.response?.status === 403) {
                     setError('У вас нет прав для просмотра этого профиля');
                 } else if (err.response?.status === 404) {
@@ -74,16 +76,13 @@ function UserProfilePage() {
                     setError('Не удалось загрузить данные пользователя');
                 }
             } finally {
-                setLoading(false);
+                if (!cancelled) setLoading(false);
             }
         };
 
-        if (!isAuthenticated && !userId) {
-            navigate('/login');
-            return;
-        }
         fetchUser();
-    }, [userId, currentUser, isAuthenticated, navigate, logout]);
+        return () => { cancelled = true; };
+    }, [userId, currentUser?.user_id, isAuthenticated, navigate, logout]);
 
     const canEdit = currentUser && user && (
         currentUser.user_id === user.user_id || 

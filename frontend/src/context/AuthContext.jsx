@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback, useMemo } from 'react';
 import { userAPI } from '../api/index';
 
 const AuthContext = createContext(null);
@@ -31,34 +31,35 @@ export const AuthProvider = ({ children }) => {
         .finally(() => setLoading(false));
     }, []);
 
-    const login = (token, refreshToken, userData) => {
+    const login = useCallback((token, refreshToken, userData) => {
         localStorage.setItem('token', token);
         if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
         setUser(userData);
         setIsAuthenticated(true);
-    };
+    }, []);
 
-    const logout = () => {
+    const logout = useCallback(() => {
         localStorage.removeItem('token');
         localStorage.removeItem('refreshToken');
         setUser(null);
         setIsAuthenticated(false);
-    };
+    }, []);
 
-    const refreshUser = async () => {
+    const refreshUser = useCallback(async () => {
         try {
             const response = await userAPI.getCurrentUser();
             setUser(response.data);
         } catch (e) {
             console.error('Ошибка обновления данных пользователя', e);
         }
-    };
+    }, []);
 
-    return (
-        <AuthContext.Provider value={{ isAuthenticated, user, loading, login, logout, refreshUser }}>
-            {children}
-        </AuthContext.Provider>
+    const value = useMemo(
+        () => ({ isAuthenticated, user, loading, login, logout, refreshUser }),
+        [isAuthenticated, user, loading, login, logout, refreshUser],
     );
+
+    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => useContext(AuthContext);
