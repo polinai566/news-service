@@ -3,7 +3,14 @@ from collections.abc import AsyncIterator, Iterator
 import pytest
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
+from testcontainers.community.postgres import PostgresContainer
 
+
+@pytest.fixture(scope="session")
+def postgres_container() -> Iterator[PostgresContainer]:
+    """Start one PostgreSQL container for the entire test session."""
+    with PostgresContainer("postgres:17") as container:
+        yield container
 
 @pytest.fixture
 def app() -> Iterator[FastAPI]:
