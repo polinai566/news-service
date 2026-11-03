@@ -1,0 +1,24 @@
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+
+pythonpath = ["."]
+
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+]
+
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+
+markers = [
+    "unit: fast, isolated tests without external infrastructure",
+    "integration: tests that verify interaction between application components",
+    "e2e: end-to-end tests covering complete user scenarios",
+]
