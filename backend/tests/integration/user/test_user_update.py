@@ -190,3 +190,32 @@ async def test_user_cannot_update_another_users_profile(
     await db_session.refresh(target_user)
     assert target_user.user_name == "protected_user"
     assert target_user.email == "protected_user@example.com"
+
+@pytest.mark.integration
+async def test_update_nonexistent_user_returns_not_found(
+    db_client: AsyncClient,
+    authorization_headers,
+) -> None:
+    """Check that updating a nonexistent user returns 404."""
+
+    user_id = 999999
+
+    headers = authorization_headers(
+        user_id=user_id,
+    )
+
+    payload = {
+        "user_name": "new_name",
+        "email": "missing_user@example.com",
+    }
+
+    response = await db_client.put(
+        f"/user/{user_id}",
+        json=payload,
+        headers=headers,
+    )
+
+    assert response.status_code == 404
+    assert response.json() == {
+        "detail": "User not found"
+    }

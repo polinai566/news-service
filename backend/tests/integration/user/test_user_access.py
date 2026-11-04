@@ -104,3 +104,25 @@ async def test_get_nonexistent_user_returns_not_found(
     assert response.json() == {
         "detail": "User not found"
     }
+
+@pytest.mark.integration
+async def test_admin_get_empty_users_list_returns_not_found(
+    db_client: AsyncClient,
+    authorization_headers,
+) -> None:
+    """Check that an empty users list returns 404."""
+
+    headers = authorization_headers(
+        user_id=999,
+        user_role="admin",
+    )
+
+    response = await db_client.get(
+        "/user/",
+        headers=headers,
+    )
+
+    assert response.status_code == 404
+    assert response.json() == {
+        "detail": "No users found"
+    }
