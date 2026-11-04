@@ -127,6 +127,7 @@ async def patched_redis(
     import app.database
     import app.user.service
     import app.session.service
+    import app.news.service
 
     original = app.database.redis_client
 
