@@ -86,6 +86,7 @@ async def test_admin_cannot_see_password_hash_in_users_list(
     assert len(users) == 2
     assert all("password" not in user for user in users)
 
+
 @pytest.mark.integration
 async def test_user_cannot_assign_admin_role_to_own_profile(
     db_client: AsyncClient,
