@@ -2,9 +2,6 @@ import pytest
 from httpx import AsyncClient
 from redis.asyncio import Redis
 
-from app.news.models import News
-from app.user.models import User
-
 
 @pytest.mark.integration
 async def test_get_empty_news_list_returns_empty_list(
