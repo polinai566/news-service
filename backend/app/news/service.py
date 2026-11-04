@@ -25,7 +25,7 @@ class NewsService:
         await redis_client.delete("news_list_all")
         # инкремент метрики создания новости
         news_created_total.labels(author_id=str(user_id)).inc()
-        task.send_notification_of_new_news(new_news.news_id)
+        task.send_notification_of_new_news.delay(new_news.news_id)
         return {"news_id": new_news.news_id}
     
     # чтение списка новостей

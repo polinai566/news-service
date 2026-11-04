@@ -4,25 +4,6 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.user.models import User
-from app.utils import create_paseto_token
-
-
-@pytest.fixture
-def authorization_headers() -> Callable[..., dict[str, str]]:
-    """Create authorization headers with a valid PASETO token."""
-
-    def _authorization_headers(
-        user_id: int,
-        user_role: str = "user",
-    ) -> dict[str, str]:
-        token = create_paseto_token(
-            user_id=user_id,
-            user_role=user_role,
-        )
-
-        return {"Authorization": f"Bearer {token}"}
-
-    return _authorization_headers
 
 
 @pytest.fixture

@@ -1,7 +1,7 @@
 import sys
 import os
 import subprocess
-from collections.abc import AsyncIterator, Iterator
+from collections.abc import AsyncIterator, Iterator, Callable
 
 import pytest
 from fastapi import FastAPI
@@ -17,6 +17,7 @@ from sqlalchemy.ext.asyncio import (
 from redis.asyncio import Redis
 from testcontainers.community.postgres import PostgresContainer
 from testcontainers.community.redis import RedisContainer
+from app.utils import create_paseto_token
 
 
 @pytest.fixture(scope="session")
@@ -250,3 +251,20 @@ async def db_client(
         base_url="http://test",
     ) as test_client:
         yield test_client
+
+@pytest.fixture
+def authorization_headers() -> Callable[..., dict[str, str]]:
+    """Create authorization headers with a valid PASETO token."""
+
+    def _authorization_headers(
+        user_id: int,
+        user_role: str = "user",
+    ) -> dict[str, str]:
+        token = create_paseto_token(
+            user_id=user_id,
+            user_role=user_role,
+        )
+
+        return {"Authorization": f"Bearer {token}"}
+
+    return _authorization_headers
