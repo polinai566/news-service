@@ -57,7 +57,6 @@ async def test_admin_cannot_see_password_hash_in_user_profile(
 @pytest.mark.integration
 async def test_admin_cannot_see_password_hash_in_users_list(
     db_client: AsyncClient,
-    db_session: AsyncSession,
     create_user,
     authorization_headers,
 ) -> None:

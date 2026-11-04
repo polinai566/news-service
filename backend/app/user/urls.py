@@ -17,6 +17,10 @@ async def register_user(payload: UserCreate, service: UserService = Depends(user
 async def get_users(service: UserService = Depends(user_service), _ = Depends(is_admin)):
     return await service.list()
 
+@router.get("/me", response_model=UserRead)
+async def get_current_user_info(current_user: User = Depends(get_current_user)):
+    return current_user
+
 @router.get("/{user_id}", response_model=UserRead)
 async def get_user_by_id(user_id: int, service: UserService = Depends(user_service), _ = Depends(same_user_or_admin)):
     return await service.get(user_id)
@@ -32,7 +36,3 @@ async def update_user(user_id: int, payload: UserUpdate, service: UserService = 
 @router.delete("/{user_id}", response_model=str)
 async def delete_user(user_id: int, service: UserService = Depends(user_service), _ = Depends(same_user_or_admin)):
     return await service.delete(user_id)
-
-@router.get("/me", response_model=UserRead)
-async def get_current_user_info(current_user: User = Depends(get_current_user)):
-    return current_user
