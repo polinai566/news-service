@@ -1,8 +1,9 @@
 import pytest
 from httpx import AsyncClient
+from sqlalchemy import update
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.news.models import News
-from app.user.models import User
 
 
 @pytest.mark.integration
@@ -38,6 +39,7 @@ async def test_get_news_by_id_returns_news_with_author(
     assert "publication_date" in response_data
     assert "registration_date" in response_data["author"]
 
+
 @pytest.mark.integration
 async def test_get_nonexistent_news_returns_not_found(
     db_client: AsyncClient,
@@ -52,3 +54,36 @@ async def test_get_nonexistent_news_returns_not_found(
     assert response.json() == {
         "detail": "News not found"
     }
+
+
+@pytest.mark.integration
+async def test_get_news_by_id_returns_cached_news(
+    db_client: AsyncClient,
+    db_session: AsyncSession,
+    create_author,
+    create_news,
+) -> None:
+    """Check that a cached news item is returned without querying the database."""
+
+    author = await create_author()
+    news = await create_news(
+        author=author,
+        header="Original header",
+    )
+
+    response = await db_client.get(f"/news/{news.news_id}")
+
+    assert response.status_code == 200
+    assert response.json()["header"] == "Original header"
+
+    await db_session.execute(
+        update(News)
+        .where(News.news_id == news.news_id)
+        .values(header="Updated directly in database")
+    )
+    await db_session.commit()
+
+    response = await db_client.get(f"/news/{news.news_id}")
+
+    assert response.status_code == 200
+    assert response.json()["header"] == "Original header"
